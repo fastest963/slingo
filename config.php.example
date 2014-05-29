@@ -1,0 +1,63 @@
+<?php
+
+//edit the below configuration array to suit your needs
+//You can customize the class for the db and auth parts if you want to use your own custom class.
+
+$configuration = array(
+
+        //connectArgs are the args that gets passed to the instance of connect()
+        'db' => array('className' => 'MongoConnection',
+                      'connectArgs' => array('database', '127.0.0.1', '27017'),
+        ),
+
+        //startArgs are the args AFTER sessionID that gets passed to the instance of start()
+        'auth' => array('className' => 'SessionAuth',
+                        'startArgs' => array('userIDKey', 'COOKIE_NAME'),
+        ),
+
+        //finds static references to html tags, variables ({example}) and html entities (&amp;)
+        'staticRegex' => '/(?:(?:<([a-zA-Z]+).*?>)*(?:{[a-zA-Z0-9\_\-]+\})*(?:<\/[a-zA-Z]+\s*>)*)|(?:\&#?[^\s\;]+;)/',
+
+        'variableRegex' => '/{([0-9]+)}/',
+
+        'points' => array('approved' => 10,
+                          'suggest' => 1,
+                          'review' => 2,
+                          'rejected' => -3,
+        ),
+
+);
+
+// if you need to define your own autoloader, do it here but make sure to use spl_autoload_register if you're using PHP 5.3+
+// if you're using <5.3 then define __autoload like usual
+
+
+/* DO NOT EDIT BELOW THIS LINE */
+
+class TranslationConfig
+{
+    public static $config;
+}
+TranslationConfig::$config = $configuration;
+
+define('APP_LIB_PATH', dirname(__FILE__) . '/lib/');
+function autoloadLibClasses($class)
+{
+    $filename = APP_LIB_PATH . str_replace('_', DIRECTORY_SEPARATOR, $class) . '.php';
+    //we can't always require because we need to fallback to any user-defined autoloaders
+    if (file_exists($filename)) {
+        require($filename);
+    }
+}
+if (PHP_VERSION_ID > 50300) {
+    //make sure our autoloader is first
+    spl_autoload_register('autoloadLibClasses', true, true);
+} else {
+    spl_autoload_register('autoloadLibClasses');
+    //php <5.3 don't have prepend as an option so we must detect any __autoload function and rename it then add it
+    if (function_exists('__autoload')) {
+        spl_autoload_register('__autoload');
+    }
+}
+
+//EOF
