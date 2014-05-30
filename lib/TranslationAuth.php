@@ -103,7 +103,6 @@ class TranslationAuth
                 //store this user in the db since this is the first time we've encountered them
                 //this could happen if they used a third-party auth system
                 //todo: lookup->store->set default perms
-                //todo: check to see if they should be the default global admin
                 if (!$db->storeNewUser($this->userID, null, null, 0, false)) {
                     return false;
                 }

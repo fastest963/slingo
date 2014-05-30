@@ -12,6 +12,13 @@ interface DB_Template
     public function connect();
 
     /**
+     * Called from install.php
+     * Should add any indexes that don't already exist, add db if it doesn't exist, etc
+     * @return bool success
+     */
+    public function install($displayDebugOutput = false);
+
+    /**
      * if user isn't found return null
      *
      * @return array|null user information
@@ -50,7 +57,7 @@ interface DB_Template
      *
      * @return array ('success' => bool, 'errorCode' => int)
      */
-    public function storeNewLanguage($id, $project, $displayName, $everyonePermission = 0, $strings = null);
+    public function storeNewLanguage($project, $displayName, $id = null, $everyonePermission = 0, $strings = null);
 
     /**
      * @return array ('language' => mixed, 'errorCode' => int)

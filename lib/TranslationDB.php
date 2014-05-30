@@ -51,6 +51,14 @@ class TranslationDB
         self::$config = $config;
     }
 
+    public function install($displayDebugOutput = false)
+    {
+        if (isset($_SERVER['REQUEST_METHOD'])) {
+            throw new Exception("Cannot run TranslationDB::install from a web server request!");
+        }
+        return $this->connection->install($displayDebugOutput);
+    }
+
     public function getUser($userID)
     {
         $return = array('user' => null,
@@ -157,15 +165,13 @@ class TranslationDB
         return $return;
     }
 
-    //todo: storeNewProject
-
-    public function storeNewLanguage($id, $project, $displayName = null, $everyonePermission = 0, $strings = null, $copyPermissionsFrom = null)
+    public function storeNewProject($displayName)
     {
         $return = array('success' => false,
                         'errorCode' => self::ERROR_UNKNOWN,
                         );
 
-        if (empty($locale) || empty($project)) {
+        if (empty($displayName)) {
             $return['errorCode'] = self::ERROR_INVALID_PARAMS;
             return $return;
         }
@@ -175,8 +181,37 @@ class TranslationDB
             return $return;
         }
 
-        if (empty($displayName)) {
-            $displayName = $id;
+        $result = $this->connection->storeNewLanguage($displayName);
+        if (!$result['success']) {
+            if ($result['exists']) {
+                $return['errorCode'] = self::ERROR_DUP_EXISTS;
+            } else {
+                $return['errorCode'] = self::ERROR_DB_ERROR;
+            }
+        } else {
+            $return['errorCode'] = 0;
+            $return['success'] = true;
+        }
+        return $return;
+    }
+
+    //todo: rename project
+    //todo: delete project
+
+    public function storeNewLanguage($displayName, $project, $id = null, $everyonePermission = 0, $strings = null, $copyPermissionsFrom = null)
+    {
+        $return = array('success' => false,
+                        'errorCode' => self::ERROR_UNKNOWN,
+                        );
+
+        if (empty($displayName) || empty($project)) {
+            $return['errorCode'] = self::ERROR_INVALID_PARAMS;
+            return $return;
+        }
+
+        if (!TranslationAuth::getInstance()->getIsGlobalAdmin()) {
+            $return['errorCode'] = self::ERROR_INVALID_PERMISSIONS;
+            return $return;
         }
 
         if (is_null($copyPermissionsFrom)) {
@@ -197,7 +232,7 @@ class TranslationDB
             }
             $permissions = $lang['permissions'];
         }
-        $result = $this->connection->storeNewLanguage($id, $project, $displayName, $permissions, $strings);
+        $result = $this->connection->storeNewLanguage($project, $displayName, $id, $permissions, $strings);
         if (!$result['success']) {
             if ($result['exists']) {
                 $return['errorCode'] = self::ERROR_DUP_EXISTS;
@@ -210,6 +245,9 @@ class TranslationDB
         }
         return $return;
     }
+
+    //todo: rename language
+    //todo: delete language
 
     public function getLanguage($id, $project)
     {
@@ -229,11 +267,6 @@ class TranslationDB
             $return['language'] = $lang;
         }
         return $lang;
-    }
-
-    public function getTopUsers($limit = 10)
-    {
-
     }
 
     public function getString($stringID, $project, $lang = self::TEMPLATE_LANG, $includeSuggestions = false)

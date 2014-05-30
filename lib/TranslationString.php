@@ -7,8 +7,8 @@ class TranslationString
      */
     private static $extractInstance; //used for extraction, we re-use the same instance as an optimization
 
-    private static $variableRegex;
-    private static $staticRegex;
+    private static $staticRegex = '/{[a-zA-Z0-9\_\-]+\}/';
+    private static $variableRegex = '/{([0-9]+)}/';
 
     //todo: priorities
 
@@ -51,9 +51,6 @@ class TranslationString
 
     public function parseRawString()
     {
-        if (!isset(self::$variableRegex)) {
-            throw new Exception("Cannot parse a TranslationString without a variableRegex.");
-        }
         if (empty(self::$variableRegex) || empty($this->value)) {
             return $this->value;
         }

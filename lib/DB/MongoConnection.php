@@ -1,18 +1,13 @@
 <?php
 
 /**
- * indexes:
- *
- * translations:
- * KEY_ID, KEY_PROJECT (unique: true, sparse: false)
- *
- * users:
- * KEY_ID (unique: true, sparse: false)
- * KEY_POINTS (sparse: true)
+ * Requires pecl mongo driver version 1.2+
  */
-
 class DB_MongoConnection implements DB_Template
 {
+    const COLL_TRANSLATIONS = 'translations';
+    const COLL_USERS = 'users';
+
     const KEY_ID = "i";
     const KEY_PROJECT = "p";
     const KEY_NAME = "n";
@@ -74,16 +69,16 @@ class DB_MongoConnection implements DB_Template
             throw new Exception("MongoConnection is missing databaseName in connect.");
         }
         if (isset($collectionNames)) {
-            if (empty($collectionNames['translations'])) {
+            if (empty($collectionNames[self::COLL_TRANSLATIONS])) {
                 throw new Exception("MongoConnection is missing collection name for translations collection.");
             }
-            if (empty($collectionNames['users'])) {
+            if (empty($collectionNames[self::COLL_USERS])) {
                 throw new Exception("MongoConnection is missing collection name for users collection.");
             }
             $this->collectionNames = $collectionNames;
         } else {
-            $this->collectionNames = array('translations' => 'translations',
-                                           'users' => 'users',
+            $this->collectionNames = array(self::COLL_TRANSLATIONS => self::COLL_TRANSLATIONS,
+                                           self::COLL_USERS => self::COLL_USERS,
                                            );
         }
         $mongo = new Mongo("mongodb://$host:$port");
@@ -188,13 +183,95 @@ class DB_MongoConnection implements DB_Template
         return $mapped;
     }
 
+    private static function escapeStringID($key)
+    {
+        return preg_replace('/$\.\s/', '_', $key); //replace characters not allowed in key names
+    }
+
+    private static function getDoesIndexMatchTemplate($template, $index)
+    {
+        foreach ($template as $k => $v) {
+            if (!isset($index[$k])) {
+                return false;
+            }
+            $v2 = $index[$k];
+            if (is_array($v)) {
+                if (!is_array($v2) || !self::getDoesIndexMatchTemplate($v, $v2)) {
+                    return false;
+                }
+            } elseif ($v != $v2) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public function install($displayDebugOutput = false)
+    {
+        $indexes = array(self::COLL_TRANSLATIONS => array(array('key' => array('_id' => 1)),
+                                                          array('key' => array(self::KEY_ID => 1, self::KEY_PROJECT => 1), 'unique' => true, 'background' => true)
+                                                          ),
+                         self::COLL_USERS => array(array('key' => array('_id' => 1)),
+                                                   array('key' => array(self::KEY_ID => 1), 'unique' => true, 'background' => true),
+                                                   array('key' => array(self::KEY_USER_POINTS => 1), 'sparse' => true, 'background' => true),
+                                                   ),
+                         );
+        foreach ($indexes as $collName => $indexesToMatch) {
+            $coll = $this->getCollection($collName);
+            $currentIndexes = $coll->getIndexInfo();
+            foreach ($currentIndexes as $index) {
+                $foundMatch = false;
+                foreach($indexesToMatch as $i => $template) {
+                    if (self::getDoesIndexMatchTemplate($template, $index)) {
+                        array_splice($indexesToMatch, $i, 1);
+                        $foundMatch = true;
+                        break;
+                    }
+                }
+                if (!$foundMatch) {
+                    //$coll->deleteIndex($index['name']);
+                    if ($displayDebugOutput) {
+                        echo "MongoConnection: Deleted index {$index['name']} from $collName\n";
+                    }
+                }
+            }
+            foreach($indexesToMatch as $indexToAdd) {
+                //everything is options but the "key"
+                $keys = $indexToAdd['key'];
+                unset($indexToAdd['key']);
+                $options = $indexToAdd;
+                $options['safe'] = true;
+                $options['timeout'] = 300000; //5 minutes
+                if ($displayDebugOutput) {
+                    echo "MongoConnection: Adding index on " . json_encode($keys) . " to collection $collName. This may take a while...\n";
+                }
+                try {
+                    $result = $coll->ensureIndex($keys, $options);
+                } catch (MongoDuplicateKeyException $e) {
+                    if ($e->getCode() != 11000) {
+                        throw $e;
+                    }
+                    $message = $e->getMessage();
+                    $dupKey = mb_substr($message, stripos($message, 'dup key: ') + 9);
+                    trigger_error("Failed to add index on " . json_encode($keys) . " to collection $collName! Duplicate key exists in the database: $dupKey", E_USER_WARNING);
+                    return false;
+                }
+                if (empty($result['ok'])) {
+                    trigger_error("Failed to add index on " . json_encode($keys) . " to collection $collName!", E_USER_WARNING);
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
     /**
      * @return array|null
      * @throws MongoException
      */
     public function getUser($userID)
     {
-        $coll = $this->getCollection('users');
+        $coll = $this->getCollection(self::COLL_USERS);
         $doc = $coll->findOne(array(self::KEY_ID => $userID));
         if (is_null($doc)) {
             return null;
@@ -217,13 +294,13 @@ class DB_MongoConnection implements DB_Template
             $doc[self::KEY_USERNAME] = $username;
         }
         if (!empty($password)) {
-            $doc[self::KEY_PASSWORD] = $password;
+            $doc[self::KEY_USER_PASSWORD] = $password;
         }
 
         $result = array('success' => false,
                         'exists' => false,
                         );
-        $coll = $this->getCollection('users');
+        $coll = $this->getCollection(self::COLL_USERS);
         try {
             $insertResult = $coll->insert($doc, array('safe' => true));
         } catch (MongoCursorException $e) {
@@ -251,7 +328,7 @@ class DB_MongoConnection implements DB_Template
             $set[self::KEY_GLOBAL_ADMIN] = (bool)$globalAdmin;
         }
 
-        $coll = $this->getCollection('users');
+        $coll = $this->getCollection(self::COLL_USERS);
         $update = array('$set' => $set);
         $updateResult = $coll->update($query, $update, array('upsert' => false, 'multiple' => false, 'safe' => true));
         if (!empty($updateResult['n'])) {
@@ -273,7 +350,7 @@ class DB_MongoConnection implements DB_Template
         $set = array(self::KEY_TSMODIFIED => time(),
                      self::KEY_USER_PASSWORD => $newPassword,
                      );
-        $coll = $this->getCollection('users');
+        $coll = $this->getCollection(self::COLL_USERS);
         $update = array('$set' => $set);
         $updateResult = $coll->update($query, $update, array('upsert' => false, 'multiple' => false, 'safe' => true));
         if (!empty($updateResult['n'])) {
@@ -290,7 +367,7 @@ class DB_MongoConnection implements DB_Template
                      );
         $inc = array(self::KEY_USER_POINTS => $pointsToAdd,
                      );
-        $coll = $this->getCollection('users');
+        $coll = $this->getCollection(self::COLL_USERS);
         $update = array('$set' => $set, '$inc' => $inc);
         $updateResult = $coll->update($query, $update, array('upsert' => false, 'multiple' => false, 'safe' => true));
         if (!empty($updateResult['n'])) {
@@ -303,8 +380,12 @@ class DB_MongoConnection implements DB_Template
      * @return array ('success' => bool, 'exists' => bool)
      * @throws MongoException
      */
-    public function storeNewLanguage($id, $project, $displayName, $permissions = null, $strings = null)
+    public function storeNewLanguage($project, $displayName, $id = null, $permissions = null, $strings = null)
     {
+        if (empty($id)) {
+            $idObj = new MongoId();
+            $id = $idObj->__toString();
+        }
         $doc = array(self::KEY_ID => $id,
                      self::KEY_NAME => $displayName,
                      self::KEY_PROJECT => $project,
@@ -314,6 +395,12 @@ class DB_MongoConnection implements DB_Template
         if (empty($strings)) {
             //make sure that we store it as an object in mongo
             $strings = new stdClass();
+        } else {
+            $escapedStrings = array();
+            foreach ($strings as $stringID => $value) {
+                $escapedStrings[self::escapeStringID($stringID)] = $value;
+            }
+            $strings = $escapedStrings;
         }
         $doc[self::KEY_STRINGS] = $strings;
         if (empty($permissions)) {
@@ -325,7 +412,7 @@ class DB_MongoConnection implements DB_Template
         $result = array('success' => false,
                         'exists' => false,
                         );
-        $coll = $this->getCollection('translations');
+        $coll = $this->getCollection(self::COLL_TRANSLATIONS);
         try {
             $insertResult = $coll->insert($doc, array('safe' => true));
         } catch (MongoCursorException $e) {
@@ -348,7 +435,7 @@ class DB_MongoConnection implements DB_Template
         $query = array(self::KEY_ID => $id,
                        self::KEY_PROJECT => $project,
                        );
-        $coll = $this->getCollection('translations');
+        $coll = $this->getCollection(self::COLL_TRANSLATIONS);
         $doc = $coll->findOne($query, array(self::KEY_PERMISSIONS));
         return self::mapLanguage($doc);
     }
@@ -361,7 +448,7 @@ class DB_MongoConnection implements DB_Template
         $query = array(self::KEY_ID => $id,
                        self::KEY_PROJECT => $project,
                        );
-        $coll = $this->getCollection('translations');
+        $coll = $this->getCollection(self::COLL_TRANSLATIONS);
         $coll->setSlaveOkay(true);
         //todo: actually use fields to ignore suggestions instead of just doing it in php and incurring the transfer cost
         $doc = $coll->findOne($query);
@@ -373,14 +460,14 @@ class DB_MongoConnection implements DB_Template
 
     public function getString($id, $project, $lang, $includeSuggestions)
     {
-        $id = preg_replace('/$\.\s/', '', $id); //remove characters not allowed in key names
+        $id = self::escapeStringID($id);
         $result = array('string' => null,
                         'stringID' => $id,
                         );
         $query = array(self::KEY_ID => $lang,
                        self::KEY_PROJECT => $project,
                        );
-        $coll = $this->getCollection('translations');
+        $coll = $this->getCollection(self::COLL_TRANSLATIONS);
         $coll->setSlaveOkay(true);
         $fields = array(self::KEY_STRINGS => 1);
         if ($includeSuggestions) {
