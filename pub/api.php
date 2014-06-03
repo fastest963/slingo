@@ -68,6 +68,27 @@ class TranslationAPIDefinitions
 
 /*** END OF DEFINITIONS ***/
 
+function getAllMethodsParams()
+{
+    $class = new ReflectionClass('TranslationAPIDefinitions');
+    $methods = $class->getMethods(ReflectionMethod::IS_PUBLIC | ReflectionMethod::IS_STATIC);
+    $methodsParamsKeyed = array();
+    foreach ($methods as $method) {
+        $methodName = $method->getName();
+        $methodReturn = call_user_func(array('TranslationAPIDefinitions', $methodName));
+        $params = array();
+        if (!empty($methodReturn['params'])) {
+            foreach ($methodReturn['params'] as $paramName => $flags) {
+                $params[] = array('name' => $paramName,
+                                  'required' => (($flags & TranslationAPIDefinitions::REQUIRED) == TranslationAPIDefinitions::REQUIRED),
+                                  );
+            }
+        }
+        $methodsParamsKeyed[$methodName] = $params;
+    }
+    return $methodsParamsKeyed;
+}
+
 function returnBadRequest($reason = null)
 {
     header("{$_SERVER['SERVER_PROTOCOL']} 400 Bad Request", 400);
@@ -103,6 +124,10 @@ if (empty($postData) || !isset($postData['header']) || empty($postData['method']
 }
 
 if (!method_exists('TranslationAPIDefinitions', $postData['method'])) {
+    if ($postData['method'] === '_methods_') {
+        returnJSON(getAllMethodsParams());
+        exit;
+    }
     returnJSON(array('result' => null, 'error' => 'unknown_method'));
     exit;
 }
