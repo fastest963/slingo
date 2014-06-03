@@ -26,10 +26,17 @@ class Auth_SessionAuth implements Auth_Template
         return $user;
     }
 
+    public function getCurrentUsername($userID)
+    {
+        //since our username is stored in the DB it'll be covered by load() in TranslationAuth
+        return null;
+    }
+
     public function login($username, $password)
     {
         $db = TranslationDB::getInstance();
         //todo: login?
+        //todo: prevent _all_ from logging in
     }
 
     public function logout()

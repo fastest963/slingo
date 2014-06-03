@@ -3,6 +3,8 @@
 class TranslationAPI
 {
 
+    /*** Auth-related methods ***/
+
     public static function login($username, $password)
     {
         $auth = TranslationAuth::getInstance();
@@ -13,10 +15,55 @@ class TranslationAPI
         return $return;
     }
 
-    public static function addSuggestion($stringID, $project, $language, $suggestion)
+    public static function logout()
+    {
+        return TranslationAuth::getInstance()->logout();
+    }
+
+    public static function getLoggedInUser()
+    {
+        return TranslationAuth::getInstance()->getUserArray();
+    }
+
+    /*** Project-related methods ***/
+
+    public static function listAllProjects()
+    {
+        $db = TranslationDB::getInstance();
+        $return = $db->getProjects();
+        return $return;
+    }
+
+    public static function createProject($name, $everyonePermission = null)
     {
         $return = array('success' => false);
-        if (empty($stringID) || empty($project) || empty($language) || empty($suggestion)) {
+        //todo: max length on name?
+        if (empty($name)) {
+            $return['errorCode'] = TranslationDB::ERROR_INVALID_PARAMS;
+            return $return;
+        }
+        $db = TranslationDB::getInstance();
+        $return = $db->storeNewProject($name, $everyonePermission);
+        return $return;
+    }
+
+    public static function createLanguage($name, $projectID, $everyonePermission = null)
+    {
+        $return = array('success' => false);
+        //todo: max length on name?
+        if (empty($name)) {
+            $return['errorCode'] = TranslationDB::ERROR_INVALID_PARAMS;
+            return $return;
+        }
+        $db = TranslationDB::getInstance();
+        $return = $db->storeNewLanguage($name, $projectID, null, $everyonePermission);
+        return $return;
+    }
+
+    public static function addSuggestion($stringID, $projectID, $language, $suggestion)
+    {
+        $return = array('success' => false);
+        if (empty($stringID) || empty($projectID) || empty($language) || empty($suggestion)) {
             $return['errorCode'] = TranslationDB::ERROR_INVALID_PARAMS;
             return $return;
         }
@@ -27,7 +74,7 @@ class TranslationAPI
         }
 
         $db = TranslationDB::getInstance();
-        $string = $db->getString($stringID, $project, $language, false);
+        $string = $db->getString($stringID, $projectID, $language, false);
         if (empty($string['string'])) {
             $return['errorCode'] = $string['errorCode'];
             return $return;

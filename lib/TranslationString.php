@@ -46,6 +46,7 @@ class TranslationString
         }
         $this->variables[] = $matches[0];
         $i = $this->nextVarIndex++;
+        //todo: what if this doesn't match variableRegex?
         return '{' . $i . '}';
     }
 

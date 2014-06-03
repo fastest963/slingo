@@ -14,6 +14,8 @@ class DB_MongoConnection implements DB_Template
     const KEY_STRINGS = "s"; //keyed by stringID
     const KEY_PERMISSIONS = "m"; //object keyed by userID for translations and int for users
     const KEY_SUGGESTIONS = "sg"; //keyed by stringID and value of array
+    const KEY_NUM_STRINGS = "ns";
+    const KEY_NUM_PENDING_STRINGS = "ps";
     const KEY_TSMODIFIED = "ts";
     const KEY_STRING_USERID = "u"; //last userID to modify the string
     const KEY_STRING_VARIABLES = "v";
@@ -31,6 +33,8 @@ class DB_MongoConnection implements DB_Template
                                     self::KEY_PROJECT => 'project',
                                     self::KEY_NAME => 'displayName',
                                     self::KEY_PERMISSIONS => 'permissions',
+                                    self::KEY_NUM_STRINGS => 'numStrings',
+                                    self::KEY_NUM_PENDING_STRINGS => 'numPendingStrings',
                                     );
 
     private static $userMap = array(self::KEY_ID => 'userID',
@@ -209,10 +213,12 @@ class DB_MongoConnection implements DB_Template
     public function install($displayDebugOutput = false)
     {
         $indexes = array(self::COLL_TRANSLATIONS => array(array('key' => array('_id' => 1)),
-                                                          array('key' => array(self::KEY_ID => 1, self::KEY_PROJECT => 1), 'unique' => true, 'background' => true)
+                                                          array('key' => array(self::KEY_ID => 1, self::KEY_PROJECT => 1), 'unique' => true, 'background' => true),
+                                                          array('key' => array(self::KEY_PROJECT => 1), 'background' => true),
                                                           ),
                          self::COLL_USERS => array(array('key' => array('_id' => 1)),
                                                    array('key' => array(self::KEY_ID => 1), 'unique' => true, 'background' => true),
+                                                   array('key' => array(self::KEY_USERNAME => 1), 'sparse' => true, 'unique' => true, 'background' => true),
                                                    array('key' => array(self::KEY_USER_POINTS => 1), 'sparse' => true, 'background' => true),
                                                    ),
                          );
@@ -229,7 +235,14 @@ class DB_MongoConnection implements DB_Template
                     }
                 }
                 if (!$foundMatch) {
-                    //$coll->deleteIndex($index['name']);
+                    //cannot use deleteIndex() because of a bug with the PHP driver and named indexes
+                    $result = $this->db->command(array("deleteIndexes" => $collName,
+                                                       "index" => $index['name'],
+                                                       ));
+                    if (empty($result['ok'])) {
+                        trigger_error("Failed to remove index {$index['name']} from collection $collName!", E_USER_WARNING);
+                        return false;
+                    }
                     if ($displayDebugOutput) {
                         echo "MongoConnection: Deleted index {$index['name']} from $collName\n";
                     }
@@ -277,6 +290,18 @@ class DB_MongoConnection implements DB_Template
             return null;
         }
         return self::mapUser($doc);
+    }
+
+    public function getNextUserID()
+    {
+        //todo: should this just return mongoID?
+        $coll = $this->getCollection(self::COLL_USERS);
+        $cursor = $coll->find()->sort(array(self::KEY_ID => -1))->limit(1);
+        $firstDoc = $cursor->getNext();
+        if (empty($firstDoc)) {
+            return 1;
+        }
+        return $firstDoc[self::KEY_ID] + 1;
     }
 
     /**
@@ -337,6 +362,18 @@ class DB_MongoConnection implements DB_Template
         return false;
     }
 
+    public function getUserPermissions($userID)
+    {
+        $query = array(self::KEY_ID => $userID,
+                       );
+        $coll = $this->getCollection(self::COLL_USERS);
+        $doc = $coll->findOne($query, array(self::KEY_PERMISSIONS => 1, self::KEY_GLOBAL_ADMIN => 1));
+        if (empty($doc)) {
+            return null;
+        }
+        return self::mapUser($doc);
+    }
+
     /**
      * Passwords should already be hashed before this
      */
@@ -369,9 +406,10 @@ class DB_MongoConnection implements DB_Template
                      );
         $coll = $this->getCollection(self::COLL_USERS);
         $update = array('$set' => $set, '$inc' => $inc);
+        //todo: do findAndModify so we can get the new value of points
         $updateResult = $coll->update($query, $update, array('upsert' => false, 'multiple' => false, 'safe' => true));
-        if (!empty($updateResult['n'])) {
-            return true;
+        if (empty($updateResult['n'])) {
+            return null;
         }
         return false;
     }
@@ -380,7 +418,7 @@ class DB_MongoConnection implements DB_Template
      * @return array ('success' => bool, 'exists' => bool)
      * @throws MongoException
      */
-    public function storeNewLanguage($project, $displayName, $id = null, $permissions = null, $strings = null)
+    public function storeNewLanguage($project, $displayName, $id = null, $everyonePermission = 0, $strings = null)
     {
         if (empty($id)) {
             $idObj = new MongoId();
@@ -403,11 +441,12 @@ class DB_MongoConnection implements DB_Template
             $strings = $escapedStrings;
         }
         $doc[self::KEY_STRINGS] = $strings;
-        if (empty($permissions)) {
+        if (is_null($everyonePermission)) {
             //make sure that we store it as an object in mongo
-            $permissions = new stdClass();
+            $doc[self::KEY_PERMISSIONS] = new stdClass();
+        } else {
+            $doc[self::KEY_PERMISSIONS] = array(TranslationDB::DEFAULT_USER => (int)$everyonePermission);
         }
-        $doc[self::KEY_PERMISSIONS] = $permissions;
 
         $result = array('success' => false,
                         'exists' => false,
@@ -441,21 +480,75 @@ class DB_MongoConnection implements DB_Template
     }
 
     /**
-     * @return array
+     * @return array languages keyed by languageID
      */
-    public function getLanguage($id, $project, $includeSuggestions = true)
+    public function getLanguages($projectID, $ids = null, $includeStrings = true, $includeSuggestions = true)
     {
-        $query = array(self::KEY_ID => $id,
-                       self::KEY_PROJECT => $project,
+        $query = array(self::KEY_PROJECT => $projectID,
                        );
+        if (!empty($ids)) {
+            $query[self::KEY_ID] = array('$in' => $ids);
+        }
+        $fields = null;
+        if (!$includeSuggestions || !$includeStrings) {
+            $fields = array();
+            if (!$includeStrings) {
+                $fields[self::KEY_STRINGS] = 0;
+            }
+            if (!$includeSuggestions){
+                $fields[self::KEY_SUGGESTIONS] = 0;
+            }
+        }
         $coll = $this->getCollection(self::COLL_TRANSLATIONS);
         $coll->setSlaveOkay(true);
-        //todo: actually use fields to ignore suggestions instead of just doing it in php and incurring the transfer cost
-        $doc = $coll->findOne($query);
-        if (!$includeSuggestions && !empty($doc)) {
-            unset($doc[self::KEY_SUGGESTIONS]);
+        $cursor = $coll->find($query, $fields);
+        $languagesKeyed = array();
+        foreach ($cursor as $doc) {
+            $languagesKeyed[$doc[self::KEY_ID]] = self::mapLanguage($doc);
         }
-        return self::mapLanguage($doc);
+        return $languagesKeyed;
+    }
+
+    /**
+     * @return array languages keyed by projectID
+     */
+    public function getLanguageFromProjects($id, $projectIDs = null, $includeStrings = true, $includeSuggestions = true)
+    {
+        $query = array(self::KEY_ID => $id,
+                       );
+        if (!empty($projectIDs)) {
+            $query[self::KEY_PROJECT] = array('$in' => $projectIDs);
+        }
+        $fields = null;
+        if (!$includeSuggestions || !$includeStrings) {
+            $fields = array();
+            if (!$includeStrings) {
+                $fields[self::KEY_STRINGS] = 0;
+            }
+            if (!$includeSuggestions){
+                $fields[self::KEY_SUGGESTIONS] = 0;
+            }
+        }
+        $coll = $this->getCollection(self::COLL_TRANSLATIONS);
+        $coll->setSlaveOkay(true);
+        $cursor = $coll->find($query, $fields);
+        $languagesKeyed = array();
+        foreach ($cursor as $doc) {
+            $languagesKeyed[$doc[self::KEY_PROJECT]] = self::mapLanguage($doc);
+        }
+        return $languagesKeyed;
+    }
+
+    /**
+     * @return array|null mapped language
+     */
+    public function getLanguage($id, $projectID, $includeStrings = true, $includeSuggestions = true)
+    {
+        $languages = self::getLanguages($projectID, array($id), $includeStrings, $includeSuggestions);
+        if (!isset($languages[$id])) {
+            return null;
+        }
+        return $languages[$id];
     }
 
     public function getString($id, $project, $lang, $includeSuggestions)
@@ -466,7 +559,7 @@ class DB_MongoConnection implements DB_Template
                         );
         $query = array(self::KEY_ID => $lang,
                        self::KEY_PROJECT => $project,
-                       );
+        );
         $coll = $this->getCollection(self::COLL_TRANSLATIONS);
         $coll->setSlaveOkay(true);
         $fields = array(self::KEY_STRINGS => 1);

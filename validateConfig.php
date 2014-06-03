@@ -47,6 +47,15 @@ if (!class_exists('Auth_' . $config['auth']['className'])) {
     echo "Config Error: [auth][className] is set to a class that cannot be found!\n";
     exit;
 }
+if (empty($config['auth']['passwordSalt']) && $config['auth']['className'] === 'SessionAuth') {
+    echo "Config Error: [auth][passwordSalt] is not set!\n";
+    exit;
+} elseif (isset($config['auth']['passwordSalt'])) {
+    if (!preg_match("/^[\\.0-9a-zA-Z]{22}$", $config['auth']['passwordSalt'])) {
+        echo "Config Error: Invalid \"[auth][passwordSalt]\"! Must be 22 characters long and only contain \"0-9A-Za-z.\" characters.\n";
+        exit;
+    }
+}
 //todo: attempt to start
 
 if (isset($config['staticRegex']) && preg_match($config['staticRegex'], '') === false) {

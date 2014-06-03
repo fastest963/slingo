@@ -35,7 +35,8 @@ class TranslationAuth
         }
         $class = "Auth_" . TranslationAuth::$config['className'];
         $this->auth = new $class();
-        call_user_func_array(array($this->auth, 'start'), $args);
+        $startResult = call_user_func_array(array($this->auth, 'start'), $args);
+        $this->handleLoginResult($startResult);
     }
 
     public static function getInstance()
@@ -59,6 +60,12 @@ class TranslationAuth
     public function setUserID($userID)
     {
         $this->userID = $userID;
+    }
+
+    //should only be called from install.php
+    public function setIsGlobalAdmin($isGlobalAdmin)
+    {
+        $this->globalAdmin = (bool)$isGlobalAdmin;
     }
 
     public function getIsLoggedIn()
@@ -94,29 +101,33 @@ class TranslationAuth
             return;
         }
         if (empty($this->userID)) {
-            //todo: should we load default permissions?
-            $user = array();
+            $db = TranslationDB::getInstance();
+            $defaultPerms = $db->getDefaultUserPermissions();
+            $user = array('permissions' => $defaultPerms['permissions']);
         } else {
+            if (!isset($this->username)) {
+                $this->username = $this->auth->getCurrentUsername($this->userID);
+            }
             $db = TranslationDB::getInstance();
             $result = $db->getUser($this->userID);
             if (empty($result['user']) && $result['errorCode'] == TranslationDB::ERROR_NOT_FOUND) {
                 //store this user in the db since this is the first time we've encountered them
                 //this could happen if they used a third-party auth system
-                //todo: lookup->store->set default perms
-                if (!$db->storeNewUser($this->userID, null, null, 0, false)) {
+                $defaultPerms = $db->getDefaultUserPermissions();
+                $storeResult = $db->storeNewUser(null, null, $this->userID, $defaultPerms['permissions']);
+                if (!$storeResult['success']) {
+                    trigger_error("Failed to store userID {$this->userID} into DB after successful auth!", E_USER_ERROR);
                     return false;
                 }
-                $this->globalAdmin = 0;
-                $this->permissions = 0;
+                $this->globalAdmin = false;
+                $this->permissions = $defaultPerms['permissions'];
                 $this->points = 0;
                 return;
             }
             $user = $result['user'];
         }
-        if (!empty($user['username'])) {
+        if (!isset($this->username) && !empty($user['username'])) {
             $this->username = $user['username'];
-        } else if (empty($this->username)) { //don't overwrite a name we got from login
-            $this->username = self::DEFAULT_USERNAME;
         }
         if (isset($user['globalAdmin'])) {
             $this->globalAdmin = (bool)$user['globalAdmin'];
@@ -153,7 +164,11 @@ class TranslationAuth
     public function getUsername()
     {
         if (!isset($this->username)) {
-            $this->load();
+            //try auth-based call first, then fall-back to load()
+            $this->username = $this->auth->getCurrentUsername($this->userID);
+            if (!isset($this->username)) {
+                $this->load();
+            }
         }
         return $this->username;
     }
@@ -186,11 +201,8 @@ class TranslationAuth
             return;
         }
         $this->userID = $result['userID'];
-        if (!empty($result['username'])) {
+        if (isset($result['username'])) {
             $this->username = $result['username'];
-        } else {
-            //todo: somehow generate some username
-            $this->username = self::DEFAULT_USERNAME;
         }
         $this->loaded = false;
     }
@@ -218,7 +230,7 @@ class TranslationAuth
     public function logout()
     {
         if ($this->auth->logout() === false) {
-            return;
+            return false;
         }
         $this->userID = null;
         $this->username = null;
@@ -226,6 +238,7 @@ class TranslationAuth
         $this->permissions = null;
         $this->points = null;
         $this->loaded = false;
+        return true;
     }
 
 }

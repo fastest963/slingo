@@ -21,6 +21,19 @@ class TranslationUser
     {
 
     }
+
+    public static function hashPassword($password, $configuredSalt = null)
+    {
+        if (empty($configuredSalt)) {
+            throw new Exception("Not salt provided for TranslationUser::hashPassword! Did you forget to set it in config?");
+        }
+        if (PHP_VERSION_ID > 50307) {
+            $salt = '$2y$12$';
+        } else {
+            $salt = '$2a$12$';
+        }
+        return crypt($password, "{$salt}{$configuredSalt}\$");
+    }
 }
 
 //EOF

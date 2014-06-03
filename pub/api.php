@@ -13,7 +13,44 @@ class TranslationAPIDefinitions
     {
         $params = array('username' => self::REQUIRED,
                         'password' => self::REQUIRED,
-        );
+                        );
+        return array('params' => $params);
+    }
+
+    public static function logout()
+    {
+        $params = array();
+        return array('params' => $params);
+    }
+
+    public static function getLoggedInUser()
+    {
+        $params = array();
+        return array('params' => $params);
+    }
+
+    public static function listProjects()
+    {
+        $params = array();
+        return array('params' => $params);
+    }
+
+    public static function createProject()
+    {
+        $params = array('name' => self::REQUIRED,
+                        'everyonePermissions' => self::OPTIONAL,
+                        );
+        return array('params' => $params);
+    }
+
+    public static function createLanguage()
+    {
+        $params = array('name' => self::REQUIRED,
+                        'projectID' => self::REQUIRED,
+                        'everyonePermission' => self::OPTIONAL,
+                        //'copyPermsFromLangID' => self::OPTIONAL,
+                        //'copyPermsFromLangProjectID' => self::OPTIONAL,
+                        );
         return array('params' => $params);
     }
 
@@ -26,7 +63,10 @@ class TranslationAPIDefinitions
                         );
         return array('params' => $params);
     }
+
 }
+
+/*** END OF DEFINITIONS ***/
 
 function returnBadRequest($reason = null)
 {
@@ -50,9 +90,9 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $postData = file_get_contents('php://input');
 if (!empty($postData)) {
-    //PHP 5.3 supports a depth param, which we want to utilize, if possible
+    //PHP 5.3 supports a depth param, which we want to utilize
     if (PHP_VERSION_ID > 50300) {
-        $postData = json_decode($postData, true, 16);
+        $postData = json_decode($postData, true, 8);
     } else {
         $postData = json_decode($postData, true);
     }
