@@ -253,7 +253,7 @@ class DB_MongoConnection implements DB_Template
                 $keys = $indexToAdd['key'];
                 unset($indexToAdd['key']);
                 $options = $indexToAdd;
-                $options['safe'] = true;
+                $options['w'] = true;
                 $options['timeout'] = 300000; //5 minutes
                 if ($displayDebugOutput) {
                     echo "MongoConnection: Adding index on " . json_encode($keys) . " to collection $collName. This may take a while...\n";
@@ -327,7 +327,7 @@ class DB_MongoConnection implements DB_Template
                         );
         $coll = $this->getCollection(self::COLL_USERS);
         try {
-            $insertResult = $coll->insert($doc, array('safe' => true));
+            $insertResult = $coll->insert($doc, array('w' => true));
         } catch (MongoCursorException $e) {
             //duplicate userID already exists
             if ($e->getCode() == 11000) {
@@ -355,7 +355,7 @@ class DB_MongoConnection implements DB_Template
 
         $coll = $this->getCollection(self::COLL_USERS);
         $update = array('$set' => $set);
-        $updateResult = $coll->update($query, $update, array('upsert' => false, 'multiple' => false, 'safe' => true));
+        $updateResult = $coll->update($query, $update, array('upsert' => false, 'multiple' => false, 'w' => true));
         if (!empty($updateResult['n'])) {
             return true;
         }
@@ -389,7 +389,7 @@ class DB_MongoConnection implements DB_Template
                      );
         $coll = $this->getCollection(self::COLL_USERS);
         $update = array('$set' => $set);
-        $updateResult = $coll->update($query, $update, array('upsert' => false, 'multiple' => false, 'safe' => true));
+        $updateResult = $coll->update($query, $update, array('upsert' => false, 'multiple' => false, 'w' => true));
         if (!empty($updateResult['n'])) {
             return true;
         }
@@ -407,7 +407,7 @@ class DB_MongoConnection implements DB_Template
         $coll = $this->getCollection(self::COLL_USERS);
         $update = array('$set' => $set, '$inc' => $inc);
         //todo: do findAndModify so we can get the new value of points
-        $updateResult = $coll->update($query, $update, array('upsert' => false, 'multiple' => false, 'safe' => true));
+        $updateResult = $coll->update($query, $update, array('upsert' => false, 'multiple' => false, 'w' => true));
         if (empty($updateResult['n'])) {
             return null;
         }
@@ -453,7 +453,7 @@ class DB_MongoConnection implements DB_Template
                         );
         $coll = $this->getCollection(self::COLL_TRANSLATIONS);
         try {
-            $insertResult = $coll->insert($doc, array('safe' => true));
+            $insertResult = $coll->insert($doc, array('w' => true));
         } catch (MongoCursorException $e) {
             //duplicate language already exists
             if ($e->getCode() == 11000) {
