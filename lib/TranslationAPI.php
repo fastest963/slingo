@@ -38,10 +38,6 @@ class TranslationAPI
     {
         $return = array('success' => false);
         //todo: max length on name?
-        if (empty($name)) {
-            $return['errorCode'] = TranslationDB::ERROR_INVALID_PARAMS;
-            return $return;
-        }
         $db = TranslationDB::getInstance();
         $return = $db->storeNewProject($name, $everyonePermission);
         return $return;
@@ -51,12 +47,32 @@ class TranslationAPI
     {
         $return = array('success' => false);
         //todo: max length on name?
-        if (empty($name)) {
-            $return['errorCode'] = TranslationDB::ERROR_INVALID_PARAMS;
-            return $return;
-        }
         $db = TranslationDB::getInstance();
         $return = $db->storeNewLanguage($name, $projectID, null, $everyonePermission);
+        return $return;
+    }
+
+    /*** Language-related methods ***/
+
+    public static function getUntranslatedLanguageStrings($projectID, $langID, $orderedByPriority = null, $limit = null)
+    {
+        if (is_null($orderedByPriority)) {
+            $orderedByPriority = true;
+        }
+        if (is_null($limit)) {
+            $limit = 10;
+        }
+        $db = TranslationDB::getInstance();
+        $return = $db->getUntranslatedStrings($projectID, $langID, $orderedByPriority, $limit);
+        return $return;
+    }
+
+    /*** String-related methods ***/
+
+    public static function getString($stringID, $projectID, $langID)
+    {
+        $db = TranslationDB::getInstance();
+        $return = $db->getString($stringID, $projectID, $langID);
         return $return;
     }
 

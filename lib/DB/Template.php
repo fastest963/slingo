@@ -93,6 +93,8 @@ interface DB_Template
 
     public function getString($id, $projectID, $lang, $includeSuggestions);
 
+    public function getUntranslatedStrings($project, $lang, $orderedByPriority = true, $limit = 0);
+
 }
 
 //EOF

@@ -10,8 +10,6 @@ class TranslationString
     private static $staticRegex = '/{[a-zA-Z0-9\_\-]+\}/';
     private static $variableRegex = '/{([0-9]+)}/';
 
-    //todo: priorities
-
     private $value;
     private $nextVarIndex = 0;
     private $variables;

@@ -370,7 +370,7 @@ class TranslationDB
         $return = array('string' => null,
                         'errorCode' => self::ERROR_UNKNOWN,
                         );
-        if (empty($stringID) || empty($project)) {
+        if (empty($stringID) || empty($project) || empty($lang)) {
             $return['errorCode'] = self::ERROR_INVALID_PARAMS;
             return $return;
         }
@@ -385,6 +385,25 @@ class TranslationDB
             unset($return['suggestions']);
         }
         $return['errorCode'] = 0;
+        return $return;
+    }
+
+    public function getUntranslatedStrings($project, $lang = self::TEMPLATE_LANG, $orderedByPriority = true, $limit = 0)
+    {
+        $return = array('strings' => null,
+                        'errorCode' => self::ERROR_UNKNOWN,
+                        );
+        if (empty($project) || empty($lang)) {
+            $return['errorCode'] = self::ERROR_INVALID_PARAMS;
+            return $return;
+        }
+
+        $result = $this->connection->getUntranslatedStrings($project, $lang, $orderedByPriority, $limit);
+        if (is_null($result['strings'])) {
+            $return['errorCode'] = self::ERROR_NOT_FOUND;
+            return $return;
+        }
+        $return['strings'] = $result['strings'];
         return $return;
     }
 

@@ -54,6 +54,26 @@ class TranslationAPIDefinitions
         return array('params' => $params);
     }
 
+    public static function getUntranslatedLanguageStrings()
+    {
+        $params = array('projectID' => self::REQUIRED,
+                        'languageID' => self::REQUIRED,
+                        'orderedByPriority' => self::OPTIONAL,
+                        'limit' => self::OPTIONAL, //default is 10
+                        );
+        return array('params' => $params);
+    }
+
+    public static function getString()
+    {
+        $params = array('stringID' => self::REQUIRED,
+                        'projectID' => self::REQUIRED,
+                        'languageID' => self::REQUIRED,
+                        );
+        return array('params' => $params);
+    }
+
+/*
     public static function addSuggestion()
     {
         $params = array('stringID' => self::REQUIRED,
@@ -63,7 +83,7 @@ class TranslationAPIDefinitions
                         );
         return array('params' => $params);
     }
-
+*/
 }
 
 /*** END OF DEFINITIONS ***/

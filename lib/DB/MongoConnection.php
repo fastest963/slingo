@@ -28,6 +28,8 @@ class DB_MongoConnection implements DB_Template
     const KEY_GLOBAL_ADMIN = "ga";
     const KEY_USER_POINTS = "p";
     const KEY_USER_PASSWORD = "w";
+    const KEY_PRIORITY = "pr";
+    const KEY_IS_TRANSLATED = "tr";
 
     private static $langMap = array(self::KEY_ID => 'id',
                                     self::KEY_PROJECT => 'project',
@@ -48,6 +50,8 @@ class DB_MongoConnection implements DB_Template
                                       self::KEY_STRING_USERID => 'lastModifiedUserID',
                                       self::KEY_STRING_VARIABLES => 'variables',
                                       self::KEY_TSMODIFIED => 'tsModified',
+                                      self::KEY_PRIORITY => 'priority',
+                                      self::KEY_IS_TRANSLATED => 'isTranslated',
                                       );
 
     private static $suggestionMap = array(self::KEY_SUGGESTION_VALUE => 'value',
@@ -212,9 +216,12 @@ class DB_MongoConnection implements DB_Template
 
     public function install($displayDebugOutput = false)
     {
+        $stringIsTranslatedKey = self::KEY_STRINGS . "." . self::KEY_IS_TRANSLATED;
+        $stringPriorityKey = self::KEY_STRINGS . "." . self::KEY_PRIORITY;
         $indexes = array(self::COLL_TRANSLATIONS => array(array('key' => array('_id' => 1)),
                                                           array('key' => array(self::KEY_ID => 1, self::KEY_PROJECT => 1), 'unique' => true, 'background' => true),
                                                           array('key' => array(self::KEY_PROJECT => 1), 'background' => true),
+                                                          array('key' => array($stringIsTranslatedKey => 1, $stringPriorityKey => -1), 'background' => true),
                                                           ),
                          self::COLL_USERS => array(array('key' => array('_id' => 1)),
                                                    array('key' => array(self::KEY_ID => 1), 'unique' => true, 'background' => true),
@@ -557,41 +564,98 @@ class DB_MongoConnection implements DB_Template
         $result = array('string' => null,
                         'stringID' => $id,
                         );
+        $stringKey = self::KEY_STRINGS . "." . $id;
         $query = array(self::KEY_ID => $lang,
                        self::KEY_PROJECT => $project,
-        );
+                       $stringKey => array('$exists' => true),
+                       );
         $coll = $this->getCollection(self::COLL_TRANSLATIONS);
         $coll->setSlaveOkay(true);
-        $fields = array(self::KEY_STRINGS => 1);
+        $fields = array($stringKey => 1);
         if ($includeSuggestions) {
-            $fields[self::KEY_SUGGESTIONS] = 1;
+            $fields[self::KEY_SUGGESTIONS . "." . $id] = 1;
             $result['suggestions'] = array();
+        }
+        $doc = $coll->findOne($query, $fields);
+        if (empty($doc) || empty($doc[self::KEY_STRINGS])) {
+            return $result;
+        }
+        //only map one string and one set of suggestions
+        $mapped = self::mapStrings($doc[self::KEY_STRINGS]);
+        $result['string'] = reset($mapped);
+        if ($includeSuggestions) {
+            $mapped = self::mapSuggestions($doc[self::KEY_SUGGESTIONS]);
+            $result['suggestions'] = reset($mapped);
+        }
+        return $result;
+    }
+
+    public function getStrings($ids, $project, $lang)
+    {
+        $result = array('strings' => null,
+                        );
+        $query = array(self::KEY_ID => $lang,
+                       self::KEY_PROJECT => $project,
+                       );
+        $coll = $this->getCollection(self::COLL_TRANSLATIONS);
+        $coll->setSlaveOkay(true);
+        $fields = array();
+        $idsKeyed = array();
+        foreach ($ids as $id) {
+            $id = self::escapeStringID($id);
+            $idsKeyed[$id] = true;
+            $fields[self::KEY_STRINGS . "." . $id] = 1;
         }
         $doc = $coll->findOne($query, $fields);
         if (empty($doc)) {
             return $result;
         }
-        //only map one string and one set of suggestions
-        foreach($doc[self::KEY_STRINGS] as $stringID => $string) {
-            if ($stringID !== $id) {
-                continue;
-            }
-            $mapped = self::mapStrings(array($stringID => $string));
-            $result['string'] = $mapped[$stringID];
-            break;
-        }
-        if ($includeSuggestions) {
-            foreach ($doc[self::KEY_SUGGESTIONS] as $stringID => $suggestions) {
-                if ($stringID !== $id) {
-                    continue;
-                }
-                $mapped = self::mapSuggestions(array($stringID => $suggestions));
-                $result['suggestions'] = $mapped[$stringID];
-                break;
-            }
-        }
+        $result['strings'] = self::mapStrings($doc[self::KEY_STRINGS]);
         return $result;
     }
+
+    public function getUntranslatedStrings($project, $lang, $orderedByPriority = true, $limit = 0)
+    {
+        $result = array('strings' => null,
+                        );
+        $query = array(self::KEY_ID => $lang,
+                       self::KEY_PROJECT => $project,
+                       );
+        $coll = $this->getCollection(self::COLL_TRANSLATIONS);
+        $coll->setSlaveOkay(true);
+        //todo: test the performance of this
+        $pipeline = array(array('$match' => $query),
+                          array('$project' => array('$' . self::KEY_STRINGS => 1)), //limit fields to ONLY strings so we don't unwind a ton of fields
+                          array('$unwind' => '$' . self::KEY_STRINGS),
+                          array('$match' => array(self::KEY_STRINGS . "." . self::KEY_IS_TRANSLATED => array(':ne' => true))),
+                          );
+        if ($orderedByPriority) {
+            $pipeline[] = array('$sort' => array(self::KEY_STRINGS . "." . self::KEY_PRIORITY => -1));
+        }
+        if ($limit > 0) {
+            //when a $sort immediately precedes a $limit, the $sort only maintains the top n results as it progresses
+            $pipeline[] = array('$limit' => $limit);
+        }
+        //if we can use aggregateCursor then we can get the docs in batches instead of all at once, using less memory
+        if (method_exists($coll, 'aggregateCursor')) {
+            $cursor = $coll->aggregateCursor($pipeline);
+        } else {
+            $aggregate = $coll->aggregate($pipeline);
+            if (empty($aggregate) || empty($aggregate['result'])) {
+                return $result;
+            }
+            $cursor = $aggregate['result'];
+        }
+        $strings = array();
+        foreach ($cursor as $doc) {
+            //we can use the plus operator since strings is keyed by unique stringID
+            //todo: does the plus operator maintain order??
+            $strings += $doc[self::KEY_STRINGS];
+        }
+        $result['strings'] = self::mapStrings($strings);
+        return $result;
+    }
+
 }
 
 //EOF
