@@ -33,6 +33,7 @@ function callAPI($method, $sessionID = null, $params = null, $protocol = 'http')
     return array('result' => $result,
                  'httpCode' => $httpCode,
                  'decoded' => $decoded,
+                 'sentData' => $request,
                  );
 }
 
@@ -66,6 +67,9 @@ if (isset($_POST['submitType']) && $_POST['submitType'] === 'call' && !empty($se
     $params = array();
     foreach ($_POST as $key => $value) {
         if (substr($key, 0, 6) !== 'param-') {
+            continue;
+        }
+        if (!isset($value[0])) {
             continue;
         }
         //try to detect and cast type, starting with json first
@@ -161,7 +165,15 @@ echo implode("\n", $outputStrings);
 
 if (!is_null($apiCallResult)) {
 
+    if (empty($apiCallResult['sentData']['params'])) {
+        $apiCallResult['sentData']['params'] = new stdClass();
+    } else if (isset($apiCallResult['sentData']['params']['password'])) {
+        $apiCallResult['sentData']['params']['password'] = "********";
+    }
+
 ?>
+    <h3>Sent Payload</h3>
+    <p style="font-family: monospace, fixed;"><?= json_encode($apiCallResult['sentData']) ?></p>
     <h3>Result</h3>
     <p>HTTP Code: <?= $apiCallResult['httpCode'] ?></p>
     <p style="font-family: monospace, fixed;"><?= $apiCallResult['result'] ?></p>
