@@ -1,5 +1,5 @@
 <?php
-require('../config.php');
+// require('../config.php');
 
 // If an optional parameter is not sent with an API call then null will be sent
 // params order should match the associated TranslationAPI function definition's order
@@ -138,6 +138,7 @@ if (!empty($postData)) {
         $postData = json_decode($postData, true);
     }
 }
+die(print_r($postData));
 if (empty($postData) || !isset($postData['header']) || empty($postData['method'])) {
     returnBadRequest('invalid_json');
     exit;
