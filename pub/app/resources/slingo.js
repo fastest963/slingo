@@ -37,6 +37,22 @@
     $(document).ready(function  () {
     	slingo.debug("document ready");
     	var appView = new slingo.Views.AppView();
+
+        $.ajax({
+            url : 'http://translate-james.dev.grooveshark.com/api.php',
+            // url : 'api.php',
+            type : 'POST',
+            data : JSON.stringify({
+                'header' : '12',
+                'method' : 'listAllProjects',
+                'sessionID' : ''
+            }),
+            success: function(data) {
+                slingo.debug(data);
+            },
+
+        })
+
     });
 
 })();
