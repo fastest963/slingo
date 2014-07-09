@@ -182,5 +182,21 @@ if (!is_null($apiCallResult)) {
 }
 
 ?>
+
+<script type="text/javascript">
+    var lastSentSessionID = "<?= $sessionID ?>";
+    if (lastSentSessionID) {
+        try {
+            localStorage.setItem('explorer-sessionID', lastSentSessionID);
+        } catch (e) {}
+    } else {
+        try {
+            var lastSessionID = localStorage.getItem('explorer-sessionID');
+            if (lastSessionID) {
+                document.getElementById('sessionID').value = lastSessionID;
+            }
+        } catch (e) {}
+    }
+</script>
 </body>
 </html>
