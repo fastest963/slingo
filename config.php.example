@@ -5,29 +5,29 @@
 
 $configuration = array(
 
-        //connectArgs are the args that gets passed to the instance of connect()
-        'db' => array('className' => 'MongoConnection',
-                      'connectArgs' => array('database', '127.0.0.1', '27017'),
+    //connectArgs are the args that gets passed to the instance of connect()
+    'db' => array('className' => 'MongoConnection',
+                  'connectArgs' => array('database', '127.0.0.1', '27017'),
+                  ),
+
+    //startArgs are the args AFTER sessionID that gets passed to the instance of start()
+    'auth' => array('className' => 'SessionAuth',
+                    'startArgs' => array('userIDKey', 'COOKIE_NAME'),
+                    'passwordSalt' => '', //only needed if not doing own password auth
+                    ),
+
+    //finds static references to html tags, variables ({example}) and html entities (&amp;)
+    'staticRegex' => '/(?:(?:<([a-zA-Z]+).*?>)*(?:{[a-zA-Z0-9\_\-]+\})*(?:<\/[a-zA-Z]+\s*>)*)|(?:\&#?[^\s\;]+;)/',
+
+    'variableRegex' => '/{([0-9]+)}/',
+
+    'points' => array('approved' => 10,
+                      'suggest' => 1,
+                      'review' => 2,
+                      'rejected' => -3,
                       ),
 
-        //startArgs are the args AFTER sessionID that gets passed to the instance of start()
-        'auth' => array('className' => 'SessionAuth',
-                        'startArgs' => array('userIDKey', 'COOKIE_NAME'),
-                        'passwordSalt' => '', //only needed if not doing own password auth
-                        ),
-
-        //finds static references to html tags, variables ({example}) and html entities (&amp;)
-        'staticRegex' => '/(?:(?:<([a-zA-Z]+).*?>)*(?:{[a-zA-Z0-9\_\-]+\})*(?:<\/[a-zA-Z]+\s*>)*)|(?:\&#?[^\s\;]+;)/',
-
-        'variableRegex' => '/{([0-9]+)}/',
-
-        'points' => array('approved' => 10,
-                          'suggest' => 1,
-                          'review' => 2,
-                          'rejected' => -3,
-                          ),
-
-        'defaultAdminUserID' => 1, //optional
+    'defaultAdminUserID' => 1, //optional
 
 );
 
