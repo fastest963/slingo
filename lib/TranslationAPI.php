@@ -17,12 +17,64 @@ class TranslationAPI
 
     public static function logout()
     {
-        return TranslationAuth::getInstance()->logout();
+        $result = TranslationAuth::getInstance()->logout();
+        return $result;
     }
 
     public static function getLoggedInUser()
     {
-        return TranslationAuth::getInstance()->getUserArray();
+        $auth = TranslationAuth::getInstance();
+        $user = $auth->getUserArray();
+        return $user;
+    }
+
+    /*** User-related methods ***/
+
+    //returns a keyed assoc array by projectID and then keyed by language
+    //each "level" also returns a "default" which is the fallback if a permission isn't defined somewhere
+    public static function getMyPermissions($projectID = null, $language = null)
+    {
+        $auth = TranslationAuth::getInstance();
+        $permissions = $auth->getLanguagesPermissions($projectID, $language);
+        return $permissions;
+    }
+
+    public static function modifyMySettings($disablePoints = null)
+    {
+        $auth = TranslationAuth::getInstance();
+        $result = $auth->modifySettings($disablePoints);
+        return $result;
+    }
+
+    public static function modifyUserGlobalPermissions($userID, $permissions = null, $globalAdmin = null, $deleteAnyOtherPermissions = null)
+    {
+        if (is_null($deleteAnyOtherPermissions)) {
+            $deleteAnyOtherPermissions = true;
+        }
+        $result = TranslationUser::modifyUserGlobalPermissions($userID, $permissions, $globalAdmin, $deleteAnyOtherPermissions);
+        return $result;
+    }
+
+    public static function modifyUserLanguagePermissions($userID, $projectID, $languageID, $permissions)
+    {
+        $result = TranslationUser::modifyUserLanguagePermissions($userID, $projectID, $languageID, $permissions);
+        return $result;
+    }
+
+    public static function modifyUserProjectPermissions($userID, $projectID, $permissions, $deleteOtherLanguagePermissions = null)
+    {
+        if (is_null($deleteOtherLanguagePermissions)) {
+            $deleteOtherLanguagePermissions = false;
+        }
+        $result = TranslationUser::modifyUserProjectPermissions($userID, $projectID, $permissions, $deleteOtherLanguagePermissions);
+        return $result;
+    }
+
+    public static function increaseUserPoints($userID, $points)
+    {
+        //when an admin adds points, it skips checking disabled
+        $result = TranslationUser::increaseUserPoints($userID, $points, false);
+        return $result;
     }
 
     /*** Project-related methods ***/

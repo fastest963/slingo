@@ -2,24 +2,29 @@
 
 class TranslationUser
 {
+    const FLAG_DISABLE_AUTO_POINTS = 1;
     /**
      * To decrease user points send in negative $points
-     * @return bool success
+     * @return array (errorCode => int, newPoints => int)
      */
-    public static function increaseUserPoints($userID, $points = 0)
+    public static function increaseUserPoints($userID, $points = 0, $skipIfDisabled = true, $bypassAuth = false)
     {
-        if (empty($userID) || empty($points)) {
-            return false;
+        if (empty($userID) || empty($points) || is_infinite($points)) {
+            return array('errorCode' => TranslationDB::ERROR_INVALID_PARAMS);
+        }
+
+        if (!$bypassAuth && !TranslationAuth::getInstance()->getIsGlobalAdmin()) {
+            return array('errorCode' => TranslationDB::ERROR_INVALID_PERMISSIONS);
         }
 
         $db = TranslationDB::getInstance();
-        $result = $db->modifyUserPoints($userID, $points);
+        $result = $db->modifyUserPoints($userID, $points, $skipIfDisabled);
         return $result['success'];
     }
 
     public static function changeUserPassword($userID, $newPassword, $oldPassword = null)
     {
-
+        //todo: do this
     }
 
     public static function hashPassword($password, $configuredSalt = null)
@@ -34,6 +39,46 @@ class TranslationUser
         }
         return crypt($password, "{$salt}{$configuredSalt}\$");
     }
+
+    public static function modifyUserGlobalPermissions($userID, $permissions = null, $globalAdmin = null, $deleteAnyOtherPermissions = true, $bypassAuth = false)
+    {
+        if (!$bypassAuth && !TranslationAuth::getInstance()->getIsGlobalAdmin()) {
+            return array('success' => false,
+                         'errorCode' => TranslationDB::ERROR_INVALID_PERMISSIONS
+                         );
+        }
+
+        $db = TranslationDB::getInstance();
+        $result = $db->modifyUserGlobalPermissions($userID, $permissions, $globalAdmin, $deleteAnyOtherPermissions);
+        return $result;
+    }
+
+    public static function modifyUserLanguagePermissions($userID, $projectID, $languageID, $permissions, $bypassAuth = false)
+    {
+        if (!$bypassAuth && !TranslationAuth::getInstance()->getIsGlobalAdmin()) {
+            return array('success' => false,
+                         'errorCode' => TranslationDB::ERROR_INVALID_PERMISSIONS
+                         );
+        }
+
+        $db = TranslationDB::getInstance();
+        $result = $db->modifyUserLanguagePermissions($userID, $projectID, $languageID, $permissions);
+        return $result;
+    }
+
+    public static function modifyUserProjectPermissions($userID, $projectID, $permissions, $deleteOtherLanguagePermissions = true, $bypassAuth = false)
+    {
+        if (!$bypassAuth && !TranslationAuth::getInstance()->getIsGlobalAdmin()) {
+            return array('success' => false,
+                         'errorCode' => TranslationDB::ERROR_INVALID_PERMISSIONS
+                         );
+        }
+
+        $db = TranslationDB::getInstance();
+        $result = $db->modifyUserLanguagePermissions($userID, $projectID, TranslationDB::TEMPLATE_LANG, $permissions, $deleteOtherLanguagePermissions);
+        return $result;
+    }
+
 }
 
 //EOF

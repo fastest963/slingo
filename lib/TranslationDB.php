@@ -15,11 +15,12 @@ class TranslationDB
     const DEFAULT_USER = "_all_";
     const TEMPLATE_LANG = "_template_";
 
-    const CAN_SUBMIT_SUGGESTION = 1;
-    const CAN_APPROVE_PERMISSION = 2;
+    const PERMISSION_CAN_SUGGEST = 1;
+    const PERMISSION_CAN_APPROVE = 2;
+    const PERMISSION_ALL = 3; // 1|2
 
     /**
-     * @var object implements DB_Template
+     * @var DB_Template
      */
     private $connection;
 
@@ -74,7 +75,7 @@ class TranslationDB
         return $return;
     }
 
-    public function storeNewUser($username = null, $password = null, $userID = null, $permissions = null, $globalAdmin = false)
+    public function storeNewUser($username = null, $password = null, $userID = null, $permissions = null, $globalAdmin = false, $flags = null)
     {
         $return = array('success' => false,
                         'errorCode' => self::ERROR_UNKNOWN,
@@ -92,22 +93,26 @@ class TranslationDB
             }
             $password = TranslationUser::hashPassword($password, TranslationConfig::$config['auth']['passwordSalt']);
         }
-        if (is_null($permissions)) {
-            $defaultPerms = $this->getDefaultUserPermissions();
-            $permissions = $defaultPerms['permissions'];
-        }
         $generatedUserID = false;
         if (is_null($userID)) {
             $userID = $this->connection->getNextUserID();
             $generatedUserID = true;
         }
-        $createResult = $this->connection->storeNewUser($userID, $username, $password, $permissions, $globalAdmin);
+        if (!is_null($permissions)) {
+            $permissions = (int)$permissions;
+        }
+        $globalAdmin = (bool)$globalAdmin;
+        if (!is_null($flags)) {
+            $flags = (int)$flags;
+        }
+
+        $createResult = $this->connection->storeNewUser($userID, $username, $password, $permissions, $globalAdmin, $flags);
         $return['success'] = $createResult['success'];
         if (!$createResult['success'] && $createResult['exists']) {
             //if we generated a userID, fetch another one and try again in case there was a race condition with another storeNewUser call
             if ($generatedUserID) {
                 $userID = $this->connection->getNextUserID();
-                return $this->storeNewUser($username, $password, $userID, $permissions, $globalAdmin);
+                return $this->storeNewUser($username, $password, $userID, $permissions, $globalAdmin, $flags);
             }
             $return['errorCode'] = self::ERROR_DUP_EXISTS;
             return $return;
@@ -117,7 +122,8 @@ class TranslationDB
         return $return;
     }
 
-    public function modifyUserPermissions($userID, $permissions = null, $globalAdmin = null)
+    //set permissions to false to remove global permissions (and fallback to defaults)
+    public function modifyUserGlobalPermissions($userID, $permissions = null, $globalAdmin = null, $deleteOtherPermissions = true)
     {
         $return = array('success' => false,
                         'errorCode' => self::ERROR_UNKNOWN,
@@ -139,12 +145,7 @@ class TranslationDB
             return $return;
         }
 
-        if (!TranslationAuth::getInstance()->getIsGlobalAdmin()) {
-            $return['errorCode'] = self::ERROR_INVALID_PERMISSIONS;
-            return $return;
-        }
-
-        $return['success'] = $this->connection->modifyUserPermissions($userID, $permissions, $globalAdmin);
+        $return['success'] = $this->connection->modifyUserGlobalPermissions($userID, $permissions, $globalAdmin, $deleteOtherPermissions);
         if (!$return['success']) {
             $return['errorCode'] = self::ERROR_NOT_FOUND;
         } else {
@@ -153,10 +154,31 @@ class TranslationDB
         return $return;
     }
 
-    public function getUserPermissions($userID)
+    //set permissions to false to remove permissions (and fallback to defaults)
+    public function modifyUserLanguagePermissions($userID, $projectID, $languageID, $permissions, $deleteOtherLangPermissions = false)
     {
-        $return = array('permissions' => 0,
-                        'globalAdmin' => false,
+        $return = array('success' => false,
+                        'errorCode' => self::ERROR_UNKNOWN,
+                        );
+
+        if (empty($userID) || empty($projectID) || empty($languageID) || is_null($permissions)) {
+            $return['errorCode'] = self::ERROR_INVALID_PARAMS;
+            return $return;
+        }
+
+        $return['success'] = $this->connection->modifyUserLanguagePermissions($userID, $projectID, $languageID, $permissions, $deleteOtherLangPermissions);
+        if (!$return['success']) {
+            $return['errorCode'] = self::ERROR_NOT_FOUND;
+        } else {
+            $return['errorCode'] = 0;
+        }
+        return $return;
+    }
+
+    //if there are literally NO permissions for a particular language/project it will NOT be returned in the assoc array
+    public function getUserLanguagesPermissions($userID, $projectID = null, $language = null)
+    {
+        $return = array('permissions' => null,
                         'errorCode' => self::ERROR_UNKNOWN,
                         );
 
@@ -165,27 +187,10 @@ class TranslationDB
             return $return;
         }
 
-        $result = $this->connection->getUserPermissions($userID);
-        if (is_null($result)) {
+        $result = $this->connection->getUserLanguagesPermissions($userID, $projectID, $language);
+        if (empty($result['exists'])) {
             $return['errorCode'] = self::ERROR_NOT_FOUND;
-        } else {
-            $return['permissions'] = $result['permissions'];
-            $return['globalAdmin'] = $result['globalAdmin'];
-            $return['errorCode'] = 0;
-        }
-        return $return;
-    }
-
-    public function getDefaultUserPermissions()
-    {
-        $return = array('permissions' => 0,
-                        'errorCode' => self::ERROR_UNKNOWN,
-                        );
-
-        $result = $this->connection->getUserPermissions(self::DEFAULT_USER);
-        if (is_null($result)) {
-            $return['errorCode'] = self::ERROR_NOT_FOUND;
-        } else {
+        } elseif (!is_null($result['permissions'])) {
             $return['permissions'] = $result['permissions'];
             $return['errorCode'] = 0;
         }
@@ -218,21 +223,40 @@ class TranslationDB
         //todo: what do we do about a custom auth situation?
     }
 
-    public function modifyUserPoints($userID, $pointsToAdd = 0)
+    public function modifyUserPoints($userID, $pointsToAdd = 0, $skipIfDisabled = true)
     {
         $return = array('success' => false,
                         'errorCode' => self::ERROR_UNKNOWN,
-                        );
+        );
 
         if (empty($userID) || empty($pointsToAdd)) {
             $return['errorCode'] = self::ERROR_INVALID_PARAMS;
             return $return;
         }
 
-        $result = $this->connection->modifyUserPoints($userID, $pointsToAdd);
-        $return['success'] = $result;
-        if (!$result) {
-            //probably means oldPassword wasn't right
+        $result = $this->connection->modifyUserPoints($userID, $pointsToAdd, $skipIfDisabled);
+        if (!$result['success']) {
+            $return['errorCode'] = self::ERROR_NOT_FOUND;
+        } else {
+            $return['newPoints'] = $result['newPoints'];
+            $return['errorCode'] = 0;
+        }
+        return $return;
+    }
+
+    public function modifyUserFlags($userID, $flagsToAdd = 0, $flagsToRemove = 0)
+    {
+        $return = array('success' => false,
+                        'errorCode' => self::ERROR_UNKNOWN,
+                        );
+
+        if (empty($userID) || (empty($flagsToAdd) && empty($flagsToRemove))) {
+            $return['errorCode'] = self::ERROR_INVALID_PARAMS;
+            return $return;
+        }
+
+        $return['success'] = $this->connection->modifyUserFlags($userID, $flagsToAdd, $flagsToRemove);
+        if (!$return['success']) {
             $return['errorCode'] = self::ERROR_NOT_FOUND;
         } else {
             $return['errorCode'] = 0;
@@ -312,6 +336,7 @@ class TranslationDB
             }
             $permissions = $lang['permissions'];
         }
+        //todo: make sure $id is actually something valid
         $result = $this->connection->storeNewLanguage($projectID, $displayName, $id, $permissions, $strings);
         if (!$result['success']) {
             if ($result['exists']) {
@@ -329,18 +354,18 @@ class TranslationDB
     //todo: rename language
     //todo: delete language
 
-    public function getProjects()
+    public function getProjects($projectIDs = null, $includeStrings = false, $includeSuggestions = false)
     {
         $return = array('projects' => null,
                         'errorCode' => self::ERROR_UNKNOWN,
                         );
 
-        $languages = $this->connection->getLanguageFromProjects(self::TEMPLATE_LANG);
-        if (empty($lang)) {
+        $projects = $this->connection->getLanguageFromProjects(self::TEMPLATE_LANG, $projectIDs, $includeStrings, $includeSuggestions);
+        if (empty($projects)) {
             $return['errorCode'] = self::ERROR_NOT_FOUND;
         } else {
             $return['errorCode'] = 0;
-            $return['projects'] = $languages;
+            $return['projects'] = $projects;
         }
         return $return;
     }

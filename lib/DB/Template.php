@@ -34,18 +34,23 @@ interface DB_Template
     /**
      * @return array (success => bool, errorCode => int)
      */
-    public function storeNewUser($userID, $username = null, $password = null, $permissions = 0, $globalAdmin = false);
+    public function storeNewUser($userID, $username = null, $password = null, $permissions = null, $globalAdmin = false, $flags = null);
 
     /**
      * @return bool success
      */
-    public function modifyUserPermissions($userID, $permissions = null, $globalAdmin = null);
+    public function modifyUserGlobalPermissions($userID, $permissions = null, $globalAdmin = null, $deleteOtherPermissions = true);
+
+    /**
+     * @return bool success
+     */
+    public function modifyUserLanguagePermissions($userID, $projectID, $languageID, $permissions, $deleteOtherLangPermissions = false);
 
     /**
      * If user wasn't found, return null
      * @return array|null (permissions => int, globalAdmin => bool)
      */
-    public function getUserPermissions($userID);
+    public function getUserLanguagesPermissions($userID, $projectID = null, $language = null);
 
     /**
      * If globalAdmin then oldPassword is optional
@@ -58,9 +63,17 @@ interface DB_Template
      * This does NOT check permissions so you must not allow this to be called directly from the API
      * Returns null if user wasn't found
      *
-     * @return int|null new value
+     * @return array (success => bool, newPoints => int)
      */
-    public function modifyUserPoints($userID, $pointsToAdd = 0);
+    public function modifyUserPoints($userID, $pointsToAdd, $skipIfDisabled = true);
+
+    /**
+     * This does NOT check permissions so you must not allow this to be called directly from the API
+     * Returns null if user wasn't found
+     *
+     * @return bool success
+     */
+    public function modifyUserFlags($userID, $flagsToAdd = 0, $flagsToRmove = 0);
 
     /**
      * If you want to copy permissions from another language then specify the ID/project

@@ -29,7 +29,60 @@ class TranslationAPIDefinitions
         return array('params' => $params);
     }
 
-    public static function listProjects()
+    public static function getMyPermissions()
+    {
+        $params = array('projectID' => self::OPTIONAL,
+                        'language' => self::OPTIONAL,
+                        );
+        return array('params' => $params);
+    }
+
+    public static function modifyMySettings()
+    {
+        $params = array('disablePoints' => self::OPTIONAL,
+                        );
+        return array('params' => $params);
+    }
+
+    public static function modifyUserGlobalPermissions()
+    {
+        $params = array('userID' => self::REQUIRED,
+                        'permissions' => self::OPTIONAL,
+                        'globalAdmin' => self::OPTIONAL,
+                        'deleteAnyOtherPermissions' => self::OPTIONAL,
+                        );
+        return array('params' => $params);
+    }
+
+    public static function modifyUserLanguagePermissions()
+    {
+        $params = array('userID' => self::REQUIRED,
+                        'projectID' => self::REQUIRED,
+                        'language' => self::REQUIRED,
+                        'permissions' => self::REQUIRED,
+                        );
+        return array('params' => $params);
+    }
+
+    public static function modifyUserProjectPermissions()
+    {
+        $params = array('userID' => self::REQUIRED,
+                        'projectID' => self::REQUIRED,
+                        'permissions' => self::REQUIRED,
+                        'deleteOtherLanguagePermissions' => self::OPTIONAL,
+                        );
+        return array('params' => $params);
+    }
+
+    public static function increaseUserPoints()
+    {
+        $params = array('userID' => self::REQUIRED,
+                        'points' => self::REQUIRED,
+                        );
+        return array('params' => $params);
+    }
+
+    public static function listAllProjects()
     {
         $params = array();
         return array('params' => $params);

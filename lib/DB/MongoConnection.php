@@ -30,9 +30,10 @@ class DB_MongoConnection implements DB_Template
     const KEY_USER_PASSWORD = "w";
     const KEY_PRIORITY = "pr";
     const KEY_IS_TRANSLATED = "tr";
+    const KEY_FLAGS = "f";
 
     private static $langMap = array(self::KEY_ID => 'id',
-                                    self::KEY_PROJECT => 'project',
+                                    self::KEY_PROJECT => 'projectID',
                                     self::KEY_NAME => 'displayName',
                                     self::KEY_PERMISSIONS => 'permissions',
                                     self::KEY_NUM_STRINGS => 'numStrings',
@@ -44,6 +45,7 @@ class DB_MongoConnection implements DB_Template
                                     self::KEY_GLOBAL_ADMIN => 'globalAdmin',
                                     self::KEY_PERMISSIONS => 'permissions',
                                     self::KEY_USER_POINTS => 'points',
+                                    self::KEY_FLAGS => 'flags',
                                     );
 
     private static $stringMap = array(self::KEY_STRING_VALUE => 'value',
@@ -218,7 +220,7 @@ class DB_MongoConnection implements DB_Template
     {
         $stringIsTranslatedKey = self::KEY_STRINGS . "." . self::KEY_IS_TRANSLATED;
         $stringPriorityKey = self::KEY_STRINGS . "." . self::KEY_PRIORITY;
-        $indexes = array(self::COLL_TRANSLATIONS => array(array('key' => array('_id' => 1)),
+        $indexes = array(self::COLL_TRANSLATIONS => array(array('key' => array('_id' => 1)), //todo: do we need this?
                                                           array('key' => array(self::KEY_ID => 1, self::KEY_PROJECT => 1), 'unique' => true, 'background' => true),
                                                           array('key' => array(self::KEY_PROJECT => 1), 'background' => true),
                                                           array('key' => array($stringIsTranslatedKey => 1, $stringPriorityKey => -1), 'background' => true),
@@ -315,10 +317,9 @@ class DB_MongoConnection implements DB_Template
      * @return array ('success' => bool, 'exists' => bool)
      * @throws MongoException
      */
-    public function storeNewUser($userID, $username = null, $password = null, $permissions = 0, $globalAdmin = false)
+    public function storeNewUser($userID, $username = null, $password = null, $permissions = null, $globalAdmin = false, $flags = null)
     {
         $doc = array(self::KEY_ID => $userID,
-                     self::KEY_PERMISSIONS => $permissions,
                      self::KEY_GLOBAL_ADMIN => $globalAdmin,
                      self::KEY_TSMODIFIED => time(),
                      );
@@ -327,6 +328,12 @@ class DB_MongoConnection implements DB_Template
         }
         if (!empty($password)) {
             $doc[self::KEY_USER_PASSWORD] = $password;
+        }
+        if (!is_null($permissions)) {
+            $doc[self::KEY_PERMISSIONS] = $permissions;
+        }
+        if (!is_null($flags)) {
+            $doc[self::KEY_FLAGS] = $flags;
         }
 
         $result = array('success' => false,
@@ -347,38 +354,182 @@ class DB_MongoConnection implements DB_Template
         return $result;
     }
 
-    public function modifyUserPermissions($userID, $permissions = null, $globalAdmin = null)
+    public function modifyUserGlobalPermissions($userID, $permissions = null, $globalAdmin = null, $deleteOtherPermissions = true)
     {
         $query = array(self::KEY_ID => $userID,
                        );
         $set = array(self::KEY_TSMODIFIED => time(),
                      );
+        $unset = array();
         if (!is_null($permissions)) {
-            $set[self::KEY_PERMISSIONS] = (int)$permissions;
+            if ($permissions === false) {
+                $unset[self::KEY_PERMISSIONS] = 1;
+            } else {
+                $set[self::KEY_PERMISSIONS] = (int)$permissions;
+            }
         }
         if (!is_null($globalAdmin)) {
+            //todo: should we unset if false?
             $set[self::KEY_GLOBAL_ADMIN] = (bool)$globalAdmin;
         }
 
         $coll = $this->getCollection(self::COLL_USERS);
         $update = array('$set' => $set);
-        $updateResult = $coll->update($query, $update, array('upsert' => false, 'multiple' => false, 'w' => true));
-        if (!empty($updateResult['n'])) {
-            return true;
+        if (!empty($unset)) {
+            $update['$unset'] = $unset;
         }
-        return false;
+        $updateResult = $coll->update($query, $update, array('upsert' => false, 'multiple' => false, 'w' => true));
+        if (empty($updateResult['n'])) {
+            return false;
+        }
+        if ($deleteOtherPermissions) {
+            $unset = array(self::KEY_PERMISSIONS  . ".$userID" => 1);
+            $coll = $this->getCollection(self::COLL_TRANSLATIONS);
+            $update = array('$unset' => $unset);
+            $coll->update($query, $update, array('upsert' => false, 'multiple' => true, 'w' => true));
+            //todo: what do we do if this fails?
+        }
+        return true;
     }
 
-    public function getUserPermissions($userID)
+    public function modifyUserLanguagePermissions($userID, $projectID, $languageID, $permissions, $deleteOtherLangPermissions = false)
     {
+        $query = array(self::KEY_ID => $languageID,
+                       self::KEY_PROJECT => $projectID,
+                       );
+        if ($permissions === false) {
+            $update['$unset'][self::KEY_PERMISSIONS][$userID] = 1;
+        } else {
+            $update['$set'][self::KEY_PERMISSIONS][$userID] = (int)$permissions;
+        }
+        $coll = $this->getCollection(self::COLL_TRANSLATIONS);
+        $updateResult = $coll->update($query, $update, array('upsert' => false, 'multiple' => false, 'w' => true));
+        if (empty($updateResult['n'])) {
+            return false;
+        }
+        if ($deleteOtherLangPermissions) {
+
+        }
+        return true;
+    }
+
+    //returns false if not found, null if no permissions and int if there are permissions
+    private function getUserGlobalPermissions($userID)
+    {
+        $result = array('exists' => false,
+                        'globalAdmin' => false,
+                        'permissions' => null,
+                        );
         $query = array(self::KEY_ID => $userID,
                        );
         $coll = $this->getCollection(self::COLL_USERS);
-        $doc = $coll->findOne($query, array(self::KEY_PERMISSIONS => 1, self::KEY_GLOBAL_ADMIN => 1));
+        $keys = array(self::KEY_PERMISSIONS => 1,
+                      self::KEY_GLOBAL_ADMIN => 1
+                      );
+        $doc = $coll->findOne($query, $keys);
         if (empty($doc)) {
-            return null;
+            return $result;
         }
-        return self::mapUser($doc);
+        $result['exists'] = true;
+        if (isset($doc[self::KEY_PERMISSIONS])) {
+            $result['permissions'] = $doc[self::KEY_PERMISSIONS];
+        }
+        if (!empty($doc[self::KEY_GLOBAL_ADMIN])) {
+            $result['globalAdmin'] = true;
+        }
+        return $result;
+    }
+
+    public function getUserLanguagesPermissions($userID, $projectID = null, $language = null)
+    {
+        $result = array('permissions' => null,
+                        'exists' => false,
+                        );
+        $userGlobalPermissions = $this->getUserGlobalPermissions($userID);
+        if (!$userGlobalPermissions['exists']) {
+            return $result;
+        }
+        $result['exists'] = true;
+
+        $coll = $this->getCollection(self::COLL_TRANSLATIONS);
+        $pipeline = array();
+        if (!empty($projectID) || !empty($language)) {
+            $where = array();
+            if (!empty($projectID)) {
+                $where[self::KEY_PROJECT] = $projectID;
+            }
+            if (!empty($projectID)) {
+                //need to get the template lang in case we need to fallback
+                $where[self::KEY_ID] = array('$in' => array($language, TranslationDB::TEMPLATE_LANG));
+            }
+            $pipeline[] = array('$match' => $pipeline);
+        }
+        //use sort so we can get the _all_ lang's first
+        $pipeline[] = array('$sort' => array(self::KEY_ID => 1, self::KEY_PROJECT => 1));
+        $keys = array('_id' => 0,
+                      self::KEY_PROJECT => 1,
+                      self::KEY_ID => 1,
+                      'user' => '$' . self::KEY_PERMISSIONS . "." . $userID,
+                      'default' => '$' . self::KEY_PERMISSIONS . "." . TranslationDB::DEFAULT_USER,
+                      );
+        $pipeline[] = array('$project' => $keys);
+        //if we can use aggregateCursor then we can get the docs in batches instead of all at once, using less memory
+        //todo: test both!!!
+        if (false && method_exists($coll, 'aggregateCursor')) {
+            $cursor = $coll->aggregateCursor($pipeline);
+        } else {
+            $aggregate = $coll->aggregate($pipeline);
+            if (empty($aggregate) || empty($aggregate['result'])) {
+                return $result;
+            }
+            $cursor = $aggregate['result'];
+        }
+        //this relys on the mongo stuff returning all the template's first
+        $defaultsPerProject = array();
+        $userPerProject = array();
+        $permissions = array();
+        foreach ($cursor as $doc) {
+            $projectID = $doc[self::KEY_PROJECT];
+            $lang = $doc[self::KEY_ID];
+            if ($lang == TranslationDB::TEMPLATE_LANG) {
+                //even though they're 2 separate arrays we don't need to set the defaults one if we got the user one
+                if (isset($doc['user'])) {
+                    $userPerProject[$projectID] = $doc['user'];
+                } elseif (isset($doc['default'])) {
+                    $defaultsPerProject[$projectID] = $doc['default'];
+                }
+                continue;
+            }
+
+            //first try language-specific user permission
+            //next try project defaults for the user
+            //next try user global permission
+            //next try default for language
+            //next try default for project
+            if ($userGlobalPermissions['globalAdmin']) {
+                $permissions[$projectID][$lang] = TranslationDB::PERMISSION_ALL;
+            } elseif (isset($doc['user'])) {
+                $permissions[$projectID][$lang] = $doc['user'];
+            } elseif (isset($userPerProject[$projectID])) {
+                $permissions[$projectID][$lang] = $userPerProject[$projectID];
+            } elseif (!is_null($userGlobalPermissions['permissions'])) {
+                $permissions[$projectID][$lang] = $userGlobalPermissions['permissions'];
+            } elseif (isset($doc['default'])) {
+                $permissions[$projectID][$lang] = $doc['default'];
+            } elseif (isset($defaultsPerProject[$projectID])) {
+                $permissions[$projectID][$lang] = $defaultsPerProject[$projectID];
+            } else {
+                //if we haven't fetched the default perms, do that now
+                if (!isset($defaultGlobalPermissions)) {
+                    $defaultGlobalPermissions = $this->getUserGlobalPermissions(TranslationDB::DEFAULT_USER);
+                }
+                if (!is_null($defaultGlobalPermissions['permissions'])) {
+                    $permissions[$projectID][$lang] = $defaultGlobalPermissions['permissions'];
+                }
+            }
+        }
+        $result['permissions'] = $permissions;
+        return $result;
     }
 
     /**
@@ -403,22 +554,60 @@ class DB_MongoConnection implements DB_Template
         return false;
     }
 
-    public function modifyUserPoints($userID, $pointsToAdd = 0)
+    public function modifyUserPoints($userID, $pointsToAdd, $skipIfDisabled = true)
     {
+        $return = array('success' => false,
+                        'newPoints' => 0,
+                        );
         $query = array(self::KEY_ID => $userID,
                        );
+        $coll = $this->getCollection(self::COLL_USERS);
+        if ($skipIfDisabled) {
+            //todo: when https://jira.mongodb.org/browse/SERVER-3518 is fixed, then use bitwise operators in findAndModify
+            $bitQuery = $query;
+            $bitQuery[self::KEY_FLAGS] = array('$exists' => true); //only fetch a doc if the flags key actually exists
+            $doc = $coll->findOne($bitQuery, array(self::KEY_USER_POINTS => 1, self::KEY_FLAGS => 1));
+            if (!empty($doc[self::KEY_FLAGS]) && ($doc[self::KEY_FLAGS] & TranslationUser::FLAG_DISABLE_AUTO_POINTS) == TranslationUser::FLAG_DISABLE_AUTO_POINTS) {
+                $return['success'] = true;
+                $return['newPoints'] = $doc[self::KEY_USER_POINTS];
+                return $return;
+            }
+        }
         $set = array(self::KEY_TSMODIFIED => time(),
                      );
         $inc = array(self::KEY_USER_POINTS => $pointsToAdd,
                      );
         $coll = $this->getCollection(self::COLL_USERS);
         $update = array('$set' => $set, '$inc' => $inc);
-        //todo: do findAndModify so we can get the new value of points
+        $newDoc = $coll->findAndModify($query, $update, array(self::KEY_USER_POINTS => 1), array('upsert' => false, 'new' => true, 'w' => true));
+        if (empty($newDoc)) {
+            return $return;
+        }
+        $return['success'] = true;
+        $return['newPoints'] = $newDoc[self::KEY_USER_POINTS];
+        return $return;
+    }
+
+    public function modifyUserFlags($userID, $flagsToAdd = 0, $flagsToRemove = 0)
+    {
+        $query = array(self::KEY_ID => $userID,
+                       );
+        $set = array(self::KEY_TSMODIFIED => time(),
+                     );
+        $bit = array(self::KEY_FLAGS => array());
+        if ($flagsToAdd > 0) {
+            $bit[self::KEY_FLAGS]['or'] = (int)$flagsToAdd;
+        }
+        if ($flagsToRemove > 0) {
+            $bit[self::KEY_FLAGS]['and'] = ~$flagsToRemove;
+        }
+        $coll = $this->getCollection(self::COLL_USERS);
+        $update = array('$bit' => $bit, '$set' => $set);
         $updateResult = $coll->update($query, $update, array('upsert' => false, 'multiple' => false, 'w' => true));
         if (empty($updateResult['n'])) {
-            return null;
+            return false;
         }
-        return false;
+        return true;
     }
 
     /**
@@ -519,14 +708,14 @@ class DB_MongoConnection implements DB_Template
     /**
      * @return array languages keyed by projectID
      */
-    public function getLanguageFromProjects($id, $projectIDs = null, $includeStrings = true, $includeSuggestions = true)
+    public function getLanguageFromProjects($id, $projectIDs = null, $includeStrings = false, $includeSuggestions = false)
     {
         $query = array(self::KEY_ID => $id,
                        );
         if (!empty($projectIDs)) {
             $query[self::KEY_PROJECT] = array('$in' => $projectIDs);
         }
-        $fields = null;
+        $fields = array();
         if (!$includeSuggestions || !$includeStrings) {
             $fields = array();
             if (!$includeStrings) {
