@@ -6,7 +6,7 @@
                 url : url,
                 type : 'GET',
                 success: function(data){
-                    defer.resolve(data);    
+                    defer.resolve(_.template(data));
                 }
             });
         }

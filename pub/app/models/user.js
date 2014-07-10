@@ -6,7 +6,7 @@
 
         defaults: {
             'flags': '',
-            'globalAdmin': '',
+            'globalAdmin': false,
             'points': '',
             'userID': '',
             'username': ''
@@ -14,7 +14,7 @@
 
         initialize: function(){
             // what ever you want to do when the model is created
-            
+
         }
 
     });

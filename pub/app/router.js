@@ -5,10 +5,10 @@
             'admin' : 'admin'
         },
         home: function(){
-            appView = new slingo.Views.AppView();
+            this.application = new slingo.Views.application();
         },
         admin: function(){
-            appView.renderAdmin();
+            this.application.renderAdmin();
         }
     });
 
