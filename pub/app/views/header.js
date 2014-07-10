@@ -2,17 +2,35 @@
     slingo.Views = slingo.Views || {};
 
     slingo.Views.header = Backbone.View.extend({
+        templatePath: 'app/templates/header.ejs',
         initialize: function(){
             this.user = this.options.user;
 
-            $('#login').popover({
+            this.render();
+
+        },
+        render: function(){
+            $this = this;
+
+            if(!this.template){
+                this.getTemplate(this.templatePath).done(function(template){
+                    $this.template = template;
+                    $this.$el.html( template($this.user.toJSON()) );
+                    $this.init();
+                });
+             }else{
+                this.$el.html(this.template(this.user.toJSON()));
+             }
+
+        },
+        init: function(){
+            this.$('#login').popover({
                 html : true,
                 placement: 'bottom',
                 content : function(){
                    return $('#login-box').html()
                 }
             });
-
         },
         events: {
             'submit #login-form' : 'login'
