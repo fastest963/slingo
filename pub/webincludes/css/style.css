@@ -1,0 +1,27 @@
+#header{
+    background: #ffffff;
+    border-color: #ffffff;    
+}
+#header a {
+    color: #5a6171
+}
+#header a:hover {
+    color: #ff643b;
+}
+.btn-popover-container {
+    display: inline-block;
+}
+
+
+.btn-popover-container .btn-popover-title, .btn-popover-container .btn-popover-content {
+    display: none;
+}
+
+.popover-content {
+  height: 250px;
+
+}
+
+.form-signin{
+  position: absolute;
+}

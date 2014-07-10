@@ -9,8 +9,17 @@
         },
         render: function() {
             $this = this;
+            
             this.getTemplate(this.template).done(function(data){
-                $this.$el.html( data );
+                //$this.$el.html( data );
+            });
+
+            $('#login').popover({
+                html : true,
+                placement: 'bottom',
+                content : function(){
+                    return $('.btn-popover-content').html()
+                }
             });
         },
         events: {
@@ -21,6 +30,7 @@
             'click #createLanguage' : 'createLanguage'
         },
         login: function() {
+            return;
             $.ajax({
                 url : slingo.API_ENDPOINT,
                 // url : 'api.php',
