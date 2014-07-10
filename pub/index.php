@@ -10,7 +10,7 @@
     <link href="webincludes/css/bootstrap.min.css" rel="stylesheet">
     <link href="webincludes/css/bootstrap.css" rel="stylesheet">
     <link href="webincludes/css/style.css" rel="stylesheet">
-    <div id="body">
+    <div id="main">
     </div>
     <script>
         var slingo = window.slingo = {

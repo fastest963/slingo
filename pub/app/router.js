@@ -5,9 +5,15 @@
             'admin' : 'admin'
         },
         home: function(){
-            this.application = new slingo.Views.application();
+            if(!this.application){
+                this.application = new slingo.Views.application();
+            }
+            this.application.renderHome();
         },
         admin: function(){
+            if(!this.application){
+                this.application = new slingo.Views.application();
+            }
             this.application.renderAdmin();
         }
     });

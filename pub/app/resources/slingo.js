@@ -4,6 +4,7 @@
         var req = function(){
             $.ajax({
                 url : url,
+                cache : true,
                 type : 'GET',
                 success: function(data){
                     defer.resolve(_.template(data));

@@ -2,17 +2,16 @@
     slingo.Views = slingo.Views || {};
 
     slingo.Views.application = Backbone.View.extend({
-        el : '#body',
+        el : '#main',
         templatePath: 'app/templates/application.ejs',
         initialize: function(options) {
 
             this.user = new slingo.Models.user();
             this.user.on('login', this.onLogin, this);
 
-            this.render();
-
         },
-        render: function() {
+        renderHome: function() {
+
             $this = this;
             
             if(!this.template){
@@ -23,15 +22,23 @@
                 });
             }else{
                 this.$el.html(this.template(this.user.toJSON()));
+                $this.init();
             }
 
         },
         renderAdmin: function(){
-            this.getTemplate('app/templates/admin.ejs').done(function(data){
-                $this.body.html(data);
+
+            $this = this;
+
+            this.getTemplate('app/templates/admin.ejs').done(function(template){
+                $this.body.html(template());
             });
         },
+        renderHeader: function(){
+            this.header.render();
+        },
         init: function  () {
+            
             this.header = new slingo.Views.header({el : '#header', user: this.user});
             this.body = this.$('#body');
             this.footer = this.$('#footer');
@@ -110,7 +117,7 @@
             });
         },
         onLogin: function(){
-            this.render();
+            this.renderHeader();
         }
 
     });
