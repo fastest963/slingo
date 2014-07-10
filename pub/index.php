@@ -24,7 +24,7 @@
                   <a class="navbar-brand" href="#">Grooveshark Translate</a>
                 </div>
                 <div class="navbar-collapse collapse">
-                  <ul class="nav navbar-nav navbar-right">
+                  <ul class="nav navbar-nav">
                     <li><a href="#">Dashboard</a></li>
                     <li><a href="#">Admin</a></li>
                     <li><a href="#">Help</a></li>

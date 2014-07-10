@@ -1,9 +1,28 @@
+body{
+    font-family: "Open Sans",helvetica,arial,sans-serif;
+    line-height: 27px;
+}
 #header{
     background: #ffffff;
-    border-color: #ffffff;    
+    border-color: #ffffff;
+    height: 80px;
+    overflow: hidden;
+    border-bottom: 1px solid #dddfe4;
+    font-weight: 800;
+}
+#header > .container {
+    margin-top: 15px;
+}
+#header > ul.nav{
+    
 }
 #header a {
-    color: #5a6171
+    color: #5a6171;
+    -webkit-transition: color 0.5s;
+    -moz-transition:    color 0.5s;
+    -ms-transition:     color 0.5s;
+    -o-transition:      color 0.5s;
+    transition:         color 0.5s;
 }
 #header a:hover {
     color: #ff643b;
