@@ -1,5 +1,108 @@
-<div class="header">
+<nav id="header" class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+    <div class="container">
+        <div class="container-fluid">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              <a class="navbar-brand" href="#" id="logo">
+                <i class="icon icon-logo"></i>
+              </a>
+            </div>
+            <div class="navbar-collapse collapse">
+              <ul class="nav navbar-nav">
+                <li><a href="#">Dashboard</a></li>
+                <li><a href="#">Admin</a></li>
+                <li><a href="#">Help</a></li>
+                <li id="login" data-toggle="popover"><a href="#">Login</a></li>
+                
+                <div class="popover" id="login-box">
+                    <div class="arrow"></div>
+                    <div class="popover-content">
+                        <div class="form-heading">
+                            Sign into Grooveshark
+                        </div>
+                        <div class="form-error-message">
+                        </div>
+                        <form role="form" id="login-form">
+                            <div class="form-group">
+                                <label for="param-username">Username</label>
+                                <input type="text" class="form-control" id="param-username" placeholder="Enter username">
+                            </div>
+                            <div class="form-group">
+                                <label for="param-password">Password</label>
+                                <input type="password" class="form-control" id="param-password" placeholder="Password">
+                            </div>
+                            <button type="submit" class="btn btn-default">Submit</button>
+                        </form>    
+                    </div>
+                </div>
+              </ul>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<div id="body" class="jumbotron">
+    <div class="container">
+        <h1>The World's Music Player In Every Language</h1>
+        <p>Do you speak multiple languages? Help make Grooveshark even better. Help make a difference right away!</p>
+        <p>
+            <input type="text" id="language-input" class="span3" style="margin: 0 auto;" data-provide="typeahead" placeholder="Select a language" data-items="4" data-source='["Alabama","Alaska","Arizona","Arkansas","California","Colorado","Connecticut","Delaware","Florida","Georgia","Hawaii","Idaho","Illinois","Indiana","Iowa","Kansas","Kentucky","Louisiana","Maine","Maryland","Massachusetts","Michigan","Minnesota","Mississippi","Missouri","Montana","Nebraska","Nevada","New Hampshire","New Jersey","New Mexico","New York","North Dakota","North Carolina","Ohio","Oklahoma","Oregon","Pennsylvania","Rhode Island","South Carolina","South Dakota","Tennessee","Texas","Utah","Vermont","Virginia","Washington","West Virginia","Wisconsin","Wyoming"]'>
+
+            <a class="btn btn-primary btn-lg" role="button" id="translate-submit">Translate</a>
+        </p>
+    </div>
 </div>
+
+<div id="footer" class="container">
+    <footer>
+        <div class="external-links pull-left">
+            <a href="http://grooveshark.com/#!/about/advertising" class="footer-link">Advertise</a>
+            <span class="slash">/</span>
+            <a href="http://store.grooveshark.com" class="footer-link" target="_blank">Merch </a>
+            <span class="slash">/</span>
+            <a href="http://grooveshark.com/#!/press" class="footer-link"> Press</a>
+            <span class="slash">/</span>
+            <a href="http://grooveshark.com/#!/careers" class="footer-link">Careers</a>
+            <span class="slash">/</span>
+            <a href="http://grooveshark.com/#!/legal/privacy" class="footer-link">Privacy</a>
+            <span class="slash">/</span>
+            <a href="http://grooveshark.com/#!/legal/dmca" class="footer-link">Copyrights</a> 
+            <span class="slash">/</span>
+            <a href="http://grooveshark.com/#!/legal/terms" class="footer-link">Terms</a>
+            <span class="slash">/</span>
+            <a href="http://help.grooveshark.com" class="footer-link" target="_blank" class="last-child">Help</a>
+        </div>
+
+        <div class="social-links pull-right">
+            <a href="http://www.supermaneddy.com" class="social-link" target="_blank">
+                <i class="icon icon-star"></i>
+                <span class="social-label" data-translate-text="IN_MEMORY">In memory</span>
+            </a>
+            <a href="http://www.facebook.com/grooveshark" class="social-link" target="_blank">
+                <i class="icon icon-facebook"></i>
+                <span class="social-label">Facebook</span>
+            </a>
+            <a class="last-child social-link" href="https://twitter.com/Grooveshark" target="_blank">
+                <i class="icon icon-twitter"></i>
+                <span class="social-label">Twitter</span>
+            </a>
+        </div>
+
+        <div class="copyright pull-left">
+            <span>&copy; 2014 Escape Media Group. </span><span> All Rights Reserved.</span>
+        </div>
+        <div class="love pull-right">
+            <span>Made with love in FL &amp; NY.</span>
+        </div>
+
+    </footer>
+</div>
+<!--
 <div class="body">
     <input type="button" id="login" value="Login"/>
     <input type="button" id="logout" value="Logout"/>
@@ -7,5 +110,4 @@
     <input type="button" id="getProjects" value="get Projects"/>
     <input type="button" id="createLanguage" value="create Language"/>
 </div>
-<div class="footer">
-</div>
+-->

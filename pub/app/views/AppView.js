@@ -2,7 +2,7 @@
     slingo.Views = slingo.Views || {};
 
     slingo.Views.AppView = Backbone.View.extend({
-        el : document.body,
+        el : '#body',
         template: 'app/templates/app/AppView.ejs',
         initialize: function(options) {
             this.render();
@@ -11,43 +11,18 @@
             $this = this;
             
             this.getTemplate(this.template).done(function(data){
-                //$this.$el.html( data );
-            });
-
-            $('#login').popover({
-                html : true,
-                placement: 'bottom',
-                content : function(){
-                    return $('.btn-popover-content').html()
-                }
+                $this.$el.html( data );
+                $this.init();
             });
         },
+        init: function  () {
+            this.header = new slingo.Views.header({el : '#header'});
+        },
         events: {
-            'click #login' : 'login',
             'click #getProjects' : 'getProjects',
             'click #logout' : 'logout',
             'click #createProject' : 'createProject',
             'click #createLanguage' : 'createLanguage'
-        },
-        login: function() {
-            return;
-            $.ajax({
-                url : slingo.API_ENDPOINT,
-                // url : 'api.php',
-                type : 'POST',
-                data : JSON.stringify({
-                    'header' : '12',
-                    'params' : {
-                        'username':'sanghal',
-                        'password':'cherry',
-                    },
-                    'submitType' : 'call',
-                    'method' : 'login'
-                }),
-                success: function(data) {
-                    slingo.debug(data);
-                }
-            });
         },
         getProjects: function() {
             $.ajax({
@@ -119,6 +94,9 @@
                     slingo.debug(data);
                 }
             });
+        },
+        login: function(){
+            alert('will login now');
         }
     });
 })();
