@@ -33,10 +33,16 @@
     <script type="text/javascript" src="app/resources/lodash.js"></script>
     <script type="text/javascript" src="app/resources/bedrock.js"></script>
     <script type="text/javascript" src="app/resources/backbone.js"></script>
-    <script type="text/javascript" src="app/views/header.js"></script>
-    <script type="text/javascript" src="app/views/AppView.js"></script>
-    <script type="text/javascript" src="app/resources/slingo.js"></script>
+
     <script type="text/javascript" src="webincludes/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="webincludes/js/bootstrap-typeahead.js"></script>
+
+    <script type="text/javascript" src="app/resources/slingo.js"></script>
+    <script type="text/javascript" src="app/models/user.js"></script>
+    <script type="text/javascript" src="app/views/header.js"></script>
+    <script type="text/javascript" src="app/views/application.js"></script>
+    
+    
+    <script type="text/javascript" src="app/router.js"></script>
 </body>
 </html>

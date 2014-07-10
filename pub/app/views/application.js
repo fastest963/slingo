@@ -1,27 +1,38 @@
 (function(){
     slingo.Views = slingo.Views || {};
 
-    slingo.Views.AppView = Backbone.View.extend({
+    slingo.Views.application = Backbone.View.extend({
         el : '#body',
-        template: 'app/templates/app/AppView.ejs',
+        templatePath: 'app/templates/application.ejs',
         initialize: function(options) {
+
+            this.user = new slingo.Models.user();
+            this.user.on('login', this.onLogin, this);
+
             this.render();
+
         },
         render: function() {
             $this = this;
             
-            this.getTemplate(this.template).done(function(data){
-                $this.$el.html( data );
-                $this.init();
-            });
+            if(!this.template){
+                this.getTemplate(this.templatePath).done(function(template){
+                    $this.template = template;
+                    $this.$el.html(template($this.user.toJSON()));
+                    $this.init();
+                });
+            }else{
+                this.$el.html(this.template(this.user.toJSON()));
+            }
+
         },
         renderAdmin: function(){
             this.getTemplate('app/templates/admin.ejs').done(function(data){
-                $this.body.html( data );
+                $this.body.html(data);
             });
         },
         init: function  () {
-            this.header = new slingo.Views.header({el : '#header'});
+            this.header = new slingo.Views.header({el : '#header', user: this.user});
             this.body = this.$('#body');
             this.footer = this.$('#footer');
         },
@@ -34,7 +45,6 @@
         getProjects: function() {
             $.ajax({
                 url : slingo.API_ENDPOINT,
-                // url : 'api.php',
                 type : 'POST',
                 data : JSON.stringify({
                     'header' : '12',
@@ -48,7 +58,6 @@
         logout: function() {
             $.ajax({
                 url : slingo.API_ENDPOINT,
-                // url : 'api.php',
                 type : 'POST',
                 data : JSON.stringify({
                     'sessionID': '1234',
@@ -64,7 +73,6 @@
         createProject: function() {
             $.ajax({
                 url : slingo.API_ENDPOINT,
-                // url : 'api.php',
                 type : 'POST',
                 data : JSON.stringify({
                     'sessionID': '1234',
@@ -84,7 +92,6 @@
         createLanguage: function() {
             $.ajax({
                 url : slingo.API_ENDPOINT,
-                // url : 'api.php',
                 type : 'POST',
                 data : JSON.stringify({
                     'sessionID': '1234',
@@ -103,7 +110,7 @@
             });
         },
         onLogin: function(){
-            alert('will login now');
+            this.render();
         }
 
     });

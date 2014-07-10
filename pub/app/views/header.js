@@ -3,6 +3,8 @@
 
     slingo.Views.header = Backbone.View.extend({
         initialize: function(){
+            this.user = this.options.user;
+
             $('#login').popover({
                 html : true,
                 placement: 'bottom',
@@ -10,6 +12,7 @@
                    return $('#login-box').html()
                 }
             });
+
         },
         events: {
             'submit #login-form' : 'login'
@@ -17,6 +20,7 @@
         login: function(e){
             e.preventDefault();
 
+            var $this = this;
             var username = this.$('#param-username').val();
             var password = this.$('#param-password').val();
             var error_message = this.$('.form-error-message');
@@ -40,7 +44,8 @@
                 success: function(data){
                     data = JSON.parse(data);
                     if(data.success === true){
-                        slingo.Models.User.set(data.user);
+                        $this.user.set(data.user);
+                        $this.user.trigger('login');
                     }else{
                         error_message.html('Oh no! Wrong username/password combination.');
                     }

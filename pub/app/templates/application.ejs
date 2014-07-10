@@ -10,12 +10,16 @@
               </button>
               <a class="navbar-brand" href="#" id="logo">
                 <i class="icon icon-logo"></i>
+                <i class="icon-animated"></i>
               </a>
             </div>
             <div class="navbar-collapse collapse">
               <ul class="nav navbar-nav">
+
                 <li><a href="#">Dashboard</a></li>
-                <li><a href="#admin">Admin</a></li>
+                <% if(globalAdmin) { %>
+                    <li><a href="#admin">Admin</a></li>
+                <% } %>
                 <li><a href="#">Help</a></li>
                 <li id="login" data-toggle="popover"><a href="#">Login</a></li>
                 
