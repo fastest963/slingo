@@ -15,8 +15,15 @@
                 $this.init();
             });
         },
+        renderAdmin: function(){
+            this.getTemplate('app/templates/admin.ejs').done(function(data){
+                $this.body.html( data );
+            });
+        },
         init: function  () {
             this.header = new slingo.Views.header({el : '#header'});
+            this.body = this.$('#body');
+            this.footer = this.$('#footer');
         },
         events: {
             'click #getProjects' : 'getProjects',
@@ -95,8 +102,9 @@
                 }
             });
         },
-        login: function(){
+        onLogin: function(){
             alert('will login now');
         }
+
     });
 })();

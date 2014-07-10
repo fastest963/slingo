@@ -1,12 +1,17 @@
 (function(){
     var slingoRouter = Backbone.Router.extend({
         routes : {
-            "/" : "home"
+            '' : 'home',
+            'admin' : 'admin'
         },
-        home : function() {
-            
+        home: function(){
+            appView = new slingo.Views.AppView();
+        },
+        admin: function(){
+            appView.renderAdmin();
         }
     });
 
     slingo.Router = new slingoRouter();
+    Backbone.history.start();
 })();

@@ -23,6 +23,7 @@
             var submit_button = this.$('button');
             submit_button.attr('disabled', 'disabled');
             error_message.html('');
+            var user = new slingo.Models.user();
 
             $.ajax({
                 url : slingo.API_ENDPOINT,
@@ -40,7 +41,8 @@
                 success: function(data){
                     data = JSON.parse(data);
                     if(data.success === true){
-                        slingo.Models.User.set(data.user);
+                        user.set(data.user);
+                        slingo.Views.AppView.login();
                     }else{
                         error_message.html('Oh no! Wrong username/password combination.');
                     }
