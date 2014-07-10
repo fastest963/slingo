@@ -44,3 +44,22 @@ body{
 .form-signin{
   position: absolute;
 }
+
+.jumbotron {
+    height: 650px;
+    padding-top: 90px;
+}
+
+  .jumbotron h1,
+  .jumbotron .h1 {
+    font-size: 50px;
+  }
+
+.span3{
+    height:50px;
+    width: 400px;
+}
+
+.jumbotron p {
+padding:30px;
+}
