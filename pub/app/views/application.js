@@ -26,20 +26,40 @@
             }
 
         },
-        renderAdmin: function(){
+        renderAdminUser: function(){
 
             $this = this;
 
-            this.getTemplate('app/templates/admin.ejs').done(function(template){
+            if(!this.adminTemplate){
+                 this.getTemplate('app/templates/admin-user.ejs').done(function(template){
+                     $this.adminTemplate = template;
+                     $this.body.html(template());
+                 });
+             }else{
+                 this.body.html(this.adminTemplate());
+             }
+        },
+
+        renderAdminProject: function(){
+
+            $this = this;
+
+            this.getTemplate('app/templates/admin-project.ejs').done(function(template){
                 $this.body.html(template());
             });
         },
+
+
         renderHeader: function(){
             this.header.render();
         },
         init: function  () {
             
-            this.header = new slingo.Views.header({el : '#header', user: this.user});
+            if(!this.header){
+              this.header = new slingo.Views.header({el : '#header', user: this.user});
+             }else{
+                 $('#header').html(this.header.el);
+             }
             this.body = this.$('#body');
             this.footer = this.$('#footer');
         },
