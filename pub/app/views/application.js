@@ -26,24 +26,10 @@
             }
 
         },
-        renderAdminUser: function(){
+        renderAdmin: function(){
 
             $this = this;
 
-<<<<<<< HEAD
-            this.getTemplate('app/templates/admin-user.ejs').done(function(template){
-                $this.body.html(template());
-            });
-        },
-
-        renderAdminProject: function(){
-
-            $this = this;
-
-            this.getTemplate('app/templates/admin-project.ejs').done(function(template){
-                $this.body.html(template());
-            });
-=======
             if(!this.adminTemplate){
                 this.getTemplate('app/templates/admin.ejs').done(function(template){
                     $this.adminTemplate = template;
@@ -53,7 +39,6 @@
                 this.body.html(this.adminTemplate());
             }
 
->>>>>>> bf91c662285c5b297074d1438f279fba65ef0dee
         },
         renderHeader: function(){
             this.header.render();
