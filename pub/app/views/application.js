@@ -30,16 +30,27 @@
 
             $this = this;
 
-            this.getTemplate('app/templates/admin.ejs').done(function(template){
-                $this.body.html(template());
-            });
+            if(!this.adminTemplate){
+                this.getTemplate('app/templates/admin.ejs').done(function(template){
+                    $this.adminTemplate = template;
+                    $this.body.html(template());
+                });
+            }else{
+                this.body.html(this.adminTemplate());
+            }
+
         },
         renderHeader: function(){
             this.header.render();
         },
         init: function  () {
+
+            if(!this.header){
+                this.header = new slingo.Views.header({el : '#header', user: this.user});
+            }else{
+                $('#header').html(this.header.el);
+            }
             
-            this.header = new slingo.Views.header({el : '#header', user: this.user});
             this.body = this.$('#body');
             this.footer = this.$('#footer');
         },
