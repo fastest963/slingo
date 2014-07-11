@@ -17,9 +17,19 @@
 
             <li><a href="#">Dashboard</a></li>
             <% if(globalAdmin) { %>
-                <li><a href="#admin">Admin</a></li>
+               
+              <li class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                  Admin <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu" role="menu">
+                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#adminUser">User</a></li>
+                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#adminProject">Project</a></li>
+                </ul>
+              </li>
             <% } %>
             <li><a href="#">Help</a></li>
+            <% if(userID == '') { %>
             <li id="login" data-toggle="popover"><a href="#">Login</a></li>
             
             <div class="popover" id="login-box">
@@ -43,6 +53,21 @@
                     </form>    
                 </div>
             </div>
+            <% } %>
+            <% if (userID != '') {%>
+              <li class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                User<span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu" role="menu">
+                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Profile</a></li>
+                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Logout</a></li>
+                </ul>
+              </li>
+              <% } %>
+
+
+
           </ul>
         </div>
     </div>

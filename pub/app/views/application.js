@@ -26,11 +26,20 @@
             }
 
         },
-        renderAdmin: function(){
+        renderAdminUser: function(){
 
             $this = this;
 
-            this.getTemplate('app/templates/admin.ejs').done(function(template){
+            this.getTemplate('app/templates/admin-user.ejs').done(function(template){
+                $this.body.html(template());
+            });
+        },
+
+        renderAdminProject: function(){
+
+            $this = this;
+
+            this.getTemplate('app/templates/admin-project.ejs').done(function(template){
                 $this.body.html(template());
             });
         },
