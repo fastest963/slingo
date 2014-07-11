@@ -6,13 +6,28 @@
         templatePath: 'app/templates/application.ejs',
         initialize: function(options) {
 
+            this.dfd = $.Deferred();
+            this.isDfd = false;
+
             this.user = new slingo.Models.user();
             this.user.on('login', this.onLogin, this);
+
+            /*
+            var $this = this;
+            this.dfd.promise( this.renderHome() ).then(function(scope){
+                
+                if(scope.dfdChain.length > 0){
+                    var fn = scope[scope.dfdChain[0]];
+                    fn.apply(scope, null);
+                    scope.dfdChain = [];
+                }
+            });
+            */ 
 
         },
         renderHome: function() {
 
-            $this = this;
+            var $this = this;
             
             if(!this.template){
                 this.getTemplate(this.templatePath).done(function(template){
@@ -25,30 +40,72 @@
                 $this.init();
             }
 
+            if(this.isDfd){
+                this.dfd.resolve();
+                this.isDfd = false;
+            }
+
         },
         renderAdminUser: function(){
 
-            $this = this;
+            var $this = this;
 
-            if(!this.adminTemplate){
-                 this.getTemplate('app/templates/admin-user.ejs').done(function(template){
-                     $this.adminTemplate = template;
-                     $this.body.html(template());
-                 });
-             }else{
-                 this.body.html(this.adminTemplate());
-             }
+            if(!this.bodyContainer){
+                this.isDfd = true;
+                this.dfd.promise( this.renderHome() ).done(function(){
+                    if(!$this.adminUserTemplate){
+                        $this.getTemplate('app/templates/admin-user.ejs').done(function(template){
+                            $this.adminUserTemplate = template;
+                            $this.bodyContainer.html($this.adminUserTemplate());
+                        });
+                    }else{
+                        $this.bodyContainer.html($this.adminUserTemplate());
+                    }
+                });
+            }else{
+                if(!this.adminUserTemplate){
+                    this.getTemplate('app/templates/admin-user.ejs').done(function(template){
+                        $this.adminUserTemplate = template;
+                        $this.bodyContainer.html($this.adminUserTemplate());
+                    });
+                }else{
+                    this.bodyContainer.html(this.adminUserTemplate());
+                }
+            }
+
         },
 
         renderAdminProject: function(){
 
-            $this = this;
+            var $this = this;
 
-            this.getTemplate('app/templates/admin-project.ejs').done(function(template){
-                $this.body.html(template());
-            });
+            if(!this.bodyContainer){
+                this.isDfd = true;
+                this.dfd.promise( this.renderHome() ).done(function(){
+                    if(!$this.adminProjectTemplate){
+                        $this.getTemplate('app/templates/admin-project.ejs').done(function(template){
+                            $this.adminProjectTemplate = template;
+                            $this.bodyContainer.html($this.adminProjectTemplate());
+                        });
+                    }else{
+                        $this.bodyContainer.html(this.adminProjectTemplate());
+                    }
+                });
+            }else{
+                if(!this.adminProjectTemplate){
+                    this.getTemplate('app/templates/admin-project.ejs').done(function(template){
+                        $this.adminProjectTemplate = template;
+                        $this.bodyContainer.html($this.adminProjectTemplate());
+                    });
+                }else{
+                    this.bodyContainer.html(this.adminProjectTemplate());
+                }
+            }
+
+            
+
+            
         },
-
 
         renderHeader: function(){
             this.header.render();
@@ -60,8 +117,10 @@
              }else{
                  $('#header').html(this.header.el);
              }
-            this.body = this.$('#body');
-            this.footer = this.$('#footer');
+            this.bodyContainer = this.$('#body');
+            this.footerContainer = this.$('#footer');
+
+            //this.dfd.resolve(this);
         },
         events: {
             'click #getProjects' : 'getProjects',
@@ -138,6 +197,19 @@
         },
         onLogin: function(){
             this.renderHeader();
+        },
+        load: function(view) {
+            this.dfdChain.push(view);
+
+            this.dfd.promise( this.renderHome() ).then(function(scope){
+                
+                if(scope.dfdChain.length > 0){
+                    var fn = scope[scope.dfdChain[0]];
+                    fn.apply(scope, null);
+                    scope.dfdChain = [];
+                }
+            });
+
         }
 
     });
