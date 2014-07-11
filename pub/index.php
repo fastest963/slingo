@@ -42,7 +42,6 @@
     <script type="text/javascript" src="app/views/header.js"></script>
     <script type="text/javascript" src="app/views/application.js"></script>
     
-    
     <script type="text/javascript" src="app/router.js"></script>
 </body>
 </html>

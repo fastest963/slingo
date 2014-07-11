@@ -12,9 +12,7 @@ body{
 #header > .container {
     margin-top: 15px;
 }
-#header ul.nav > li {
-    margin: 0px 30px;
-}
+
 #logo i, #logo:hover{
     line-height: 0.4;
     -webkit-font-smoothing: antialiased;
@@ -49,6 +47,9 @@ body{
 #header .nav a:hover {
     color: #ff643b;
 }
+#header .nav li a {
+    background-color: #ffffff; 
+}
 #header .popover{
     -webkit-touch-callout: none;
     -webkit-user-select: none;
@@ -77,10 +78,33 @@ body{
 #body{
     margin-top: 80px;
 }
+#body > .welcome-board{
+    width: 100%;
+    margin: 10px 0px;
+    height: 450px;
+    position: relative;
+}
+.welcome-board > .bg {
+    background: url(../image/bg.jpg) no-repeat center center fixed;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;
+    -webkit-filter: blur(2px);
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: -10;
+    left: -11;
+}
+.welcome-board > .heading{
+    position: relative;
+    color: #f1f2f4;
+    margin: 0px 10px;
+}
 #language-input {
     padding: 5px;
     height: 55px;
-    width: 350px;
     outline: none;
 }
 #translate-submit{
@@ -89,13 +113,16 @@ body{
     border-color: #46be9c;
     line-height: 1.7;
     height: 55px;
-    width: 130px;
     border: 0 none;
-    margin-bottom: 3px;
     border-radius: 0px;
+    margin-left: 5px;
 }
 #body .typeahead{
     min-width: 350px;
+}
+#footer {
+    width: 100%;
+    height: 80px;
 }
 #footer a{
     color: #5a6171;

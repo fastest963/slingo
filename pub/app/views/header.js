@@ -33,7 +33,11 @@
             });
         },
         events: {
+            'click #login a' : 'stopLoginAction',
             'submit #login-form' : 'login'
+        },
+        stopLoginAction: function(e){
+            e.preventDefault();
         },
         login: function(e){
             e.preventDefault();
