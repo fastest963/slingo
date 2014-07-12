@@ -3,7 +3,8 @@
         routes : {
             '' : 'home',
             'adminUser' : 'adminUser',
-            'adminProject' : 'adminProject'
+            'adminProject' : 'adminProject',
+            'translate/:lang' : 'languageTranslation'
         },
         home: function(){
             if(!this.application){
@@ -22,6 +23,12 @@
                 this.application = new slingo.Views.application();
             }
             this.application.renderAdminProject();
+        },
+        languageTranslation: function(lang){
+            if(!this.application){
+                this.application = new slingo.Views.application();
+            }
+            this.application.renderLanguageCollection(lang);
         }
     });
 

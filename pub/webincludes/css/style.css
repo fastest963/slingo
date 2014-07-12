@@ -78,11 +78,11 @@ body{
 #body{
     margin-top: 80px;
 }
-#body > .welcome-board{
+.welcome-board{
     width: 100%;
-    margin: 10px 0px;
-    height: 450px;
+    height: 550px;
     position: relative;
+    margin: -5px 0px;
 }
 .welcome-board > .bg {
     background: url(../image/bg.jpg) no-repeat center center fixed;
@@ -90,22 +90,73 @@ body{
     -moz-background-size: cover;
     -o-background-size: cover;
     background-size: cover;
-    -webkit-filter: blur(2px);
+
+    filter: blur(2px) grayscale(30%);
+    -ms-filter: blur(2px) grayscale(30%);
+    -moz-filter: blur(2px) grayscale(30%);
+    -o-filter: blur(2px) grayscale(30%);
+    -webkit-filter: blur(2px) grayscale(30%);
+
+
     position: absolute;
     top: 0;
     bottom: 0;
     right: -10;
     left: -11;
 }
-.welcome-board > .heading{
+.welcome-board > .left-container, .welcome-board > .right-container{
     position: relative;
+}
+.welcome-board > .left-container{
+    height: 100%;
+    width: 70%;
     color: #f1f2f4;
-    margin: 0px 10px;
+    padding: 100;
+}
+.welcome-board > .right-container{
+    height: 100%;
+    width: 25%;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    line-height: 1.2;
+    color: white;
+    font-size: 50px;
+    text-shadow: 1px 1px #ff643b;
+
+    filter: blur(1px);
+    -ms-filter: blur(1px);
+    -moz-filter: blur(1px);
+    -o-filter: blur(1px);
+    -webkit-filter: blur(1px);
+}
+.welcome-board > .right-container ul {
+    list-style-type: none;
+}
+.welcome-board .typeahead .active a {
+    background-color: #46be9c;
+}
+.translation-stats{
+    height: 180px;
+    background: #46be9c;
+    text-align: center;
+    display: table-cell;
+    vertical-align: middle;
+    width: 1%;
+}
+.translation-stats > .content {
+    
+    color: #f1f2f4;
+    font-size: 40px;
 }
 #language-input {
     padding: 5px;
     height: 55px;
     outline: none;
+    color: #5a6171;
 }
 #translate-submit{
     color: white;
@@ -117,8 +168,12 @@ body{
     border-radius: 0px;
     margin-left: 5px;
 }
-#body .typeahead{
-    min-width: 350px;
+#language-collection{
+    height: 100%;
+    text-align: center;
+}
+#language-collection > .buttons{
+    width: 50%;
 }
 #footer {
     width: 100%;
