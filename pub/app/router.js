@@ -35,7 +35,6 @@
             this.application.renderAdminProjectForm ();
         },
 
-<<<<<<< HEAD
         adminProjectEdit: function(){
             if(!this.application){
                 this.application = new slingo.Views.application();
@@ -43,10 +42,9 @@
             this.application.renderAdminProjectEdit ();
         },
 
-        languageTranslation: function(lang){
-=======
+
         languageTranslation: function(proj, lang){
->>>>>>> 84fd346dea6bbc059ab09defff58953907515e19
+
             if(!this.application){
                 this.application = new slingo.Views.application();
             }
