@@ -3,7 +3,10 @@
         routes : {
             '' : 'home',
             'adminUser' : 'adminUser',
-            'adminProject' : 'adminProject'
+            'adminProject' : 'adminProject',
+            'adminProjectForm' : 'adminProjectForm'
+
+
         },
         home: function(){
             if(!this.application){
@@ -22,6 +25,12 @@
                 this.application = new slingo.Views.application();
             }
             this.application.renderAdminProject();
+        },
+        adminProjectForm: function(){
+            if(!this.application){
+                this.application = new slingo.Views.application();
+            }
+            this.application.renderAdminProjectForm ();
         }
     });
 

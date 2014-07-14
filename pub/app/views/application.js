@@ -79,6 +79,7 @@
 
             var $this = this;
 
+
             if(!this.bodyContainer){
                 this.isDfd = true;
                 this.dfd.promise( this.renderHome() ).done(function(){
@@ -99,6 +100,38 @@
                     });
                 }else{
                     this.bodyContainer.html(this.adminProjectTemplate());
+                }
+            }
+
+            
+
+            
+        },
+
+        renderAdminProjectForm: function(){
+
+            var $this = this;
+
+            if(!this.bodyContainer){
+                this.isDfd = true;
+                this.dfd.promise( this.renderHome() ).done(function(){
+                    if(!$this.adminProjectFormTemplate){
+                        $this.getTemplate('app/templates/admin-project-form.ejs').done(function(template){
+                            $this.adminProjectFormTemplate = template;
+                            $this.bodyContainer.html($this.adminProjectFormTemplate());
+                        });
+                    }else{
+                        $this.bodyContainer.html(this.adminProjectFormTemplate());
+                    }
+                });
+            }else{
+                if(!this.adminProjectFormTemplate){
+                    this.getTemplate('app/templates/admin-project-form.ejs').done(function(template){
+                        $this.adminProjectFormTemplate = template;
+                        $this.bodyContainer.html($this.adminProjectFormTemplate());
+                    });
+                }else{
+                    this.bodyContainer.html(this.adminProjectFormTemplate());
                 }
             }
 
@@ -156,7 +189,15 @@
                 }
             });
         },
-        createProject: function() {
+        createProject: function(e) {
+            e.preventDefault();
+
+            var $this = this;
+            var name = this.$('#param-name').val();
+            var error_message = this.$('.form-error-message');
+            var submit_button = this.$('button');
+            submit_button.attr('disabled', 'disabled');
+            error_message.html('');
             $.ajax({
                 url : slingo.API_ENDPOINT,
                 type : 'POST',
@@ -170,11 +211,18 @@
                         'everyonePermissions' : 'permissions'
                     }
                 }),
-                success: function(data) {
-                    slingo.debug(data);
-                }
+                    success: function(data){
+                    data = JSON.parse(data);
+                    if(data.success === true){
+                        $this.user.set(data.project);
+                        // $this.user.trigger('login');
+                    }else{
+                        error_message.html('No project was created');
+                    }
+                    submit_button.removeAttr('disabled');
             });
         },
+        
         createLanguage: function() {
             $.ajax({
                 url : slingo.API_ENDPOINT,
