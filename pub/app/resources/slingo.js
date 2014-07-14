@@ -1,4 +1,5 @@
 (function(){
+
     Backbone.View.prototype.getTemplate = function(url) {
         var defer = $.Deferred();
         var req = function(){

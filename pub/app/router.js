@@ -4,8 +4,9 @@
             '' : 'home',
             'adminUser' : 'adminUser',
             'adminProject' : 'adminProject',
-            'adminProjectForm' : 'adminProjectForm'
 
+            'adminProjectForm' : 'adminProjectForm',
+            'translate/:lang' : 'languageTranslation'
 
         },
         home: function(){
@@ -26,11 +27,19 @@
             }
             this.application.renderAdminProject();
         },
+
         adminProjectForm: function(){
             if(!this.application){
                 this.application = new slingo.Views.application();
             }
             this.application.renderAdminProjectForm ();
+        },
+
+        languageTranslation: function(lang){
+            if(!this.application){
+                this.application = new slingo.Views.application();
+            }
+            this.application.renderLanguageCollection(lang);
         }
     });
 

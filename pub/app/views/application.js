@@ -12,31 +12,44 @@
             this.user = new slingo.Models.user();
             this.user.on('login', this.onLogin, this);
 
-            /*
-            var $this = this;
-            this.dfd.promise( this.renderHome() ).then(function(scope){
-                
-                if(scope.dfdChain.length > 0){
-                    var fn = scope[scope.dfdChain[0]];
-                    fn.apply(scope, null);
-                    scope.dfdChain = [];
-                }
-            });
-            */ 
-
         },
-        renderHome: function() {
+        events: {
+            'click #getProjects' : 'getProjects',
+            'click #logout' : 'logout',
+            'click #createProject' : 'createProject',
+            'click #createLanguage' : 'createLanguage',
+            'click #translate-submit' : 'translate'
+        },
+        translate: function(e){
+            e.preventDefault();
+
+            var lang = this.$('#language-input').val();
+
+            slingo.Router.navigate('translate/' + lang, {trigger: true});
+        },
+        renderHome: function(obj) {
 
             var $this = this;
+            var attrs = $this.user.toJSON();
             
+            if(obj){
+                for(key in obj){
+                   if (obj.hasOwnProperty(key)) {
+                       attrs[key] = obj[key];
+                   }
+                }
+            }else{
+                attrs['lang'] = '';
+            }
+
             if(!this.template){
                 this.getTemplate(this.templatePath).done(function(template){
                     $this.template = template;
-                    $this.$el.html(template($this.user.toJSON()));
+                    $this.$el.html(template(attrs));
                     $this.init();
                 });
             }else{
-                this.$el.html(this.template(this.user.toJSON()));
+                this.$el.html(this.template(attrs));
                 $this.init();
             }
 
@@ -74,7 +87,6 @@
             }
 
         },
-
         renderAdminProject: function(){
 
             var $this = this;
@@ -102,11 +114,37 @@
                     this.bodyContainer.html(this.adminProjectTemplate());
                 }
             }
-
-            
-
             
         },
+        renderLanguageCollection: function(lang){
+
+            var $this = this;
+            var attrs = {'lang': lang};
+
+            if(!this.bodyContainer){
+                this.isDfd = true;
+                this.dfd.promise( this.renderHome(attrs) ).done(function(){
+                    if(!$this.languageTemplate){
+                        $this.getTemplate('app/templates/language-collection.ejs').done(function(template){
+                            $this.languageTemplate = template;
+                            $this.bodyContainer.append($this.languageTemplate());
+                        });
+                    }else{
+                        $this.bodyContainer.find('#language-collection').html(this.languageTemplate());
+                    }
+                });
+            }else{
+                if(!this.languageTemplate){
+                    this.getTemplate('app/templates/language-collection.ejs').done(function(template){
+                        $this.languageTemplate = template;
+                        $this.bodyContainer.append($this.languageTemplate());
+                    });
+                }else{
+                    this.bodyContainer.find('#language-collection').html(this.languageTemplate());
+                }
+            }
+        },
+
 
         renderAdminProjectForm: function(){
 
@@ -135,14 +173,12 @@
                 }
             }
 
-            
-
-            
         },
 
         renderHeader: function(){
             this.header.render();
         },
+        
         init: function  () {
             
             if(!this.header){
@@ -154,12 +190,6 @@
             this.footerContainer = this.$('#footer');
 
             //this.dfd.resolve(this);
-        },
-        events: {
-            'click #getProjects' : 'getProjects',
-            'click #logout' : 'logout',
-            'click #createProject' : 'createProject',
-            'click #createLanguage' : 'createLanguage'
         },
         getProjects: function() {
             $.ajax({
@@ -189,39 +219,7 @@
                 }
             });
         },
-        createProject: function(e) {
-            e.preventDefault();
 
-            var $this = this;
-            var name = this.$('#param-name').val();
-            var error_message = this.$('.form-error-message');
-            var submit_button = this.$('button');
-            submit_button.attr('disabled', 'disabled');
-            error_message.html('');
-            $.ajax({
-                url : slingo.API_ENDPOINT,
-                type : 'POST',
-                data : JSON.stringify({
-                    'sessionID': '1234',
-                    'submitType': 'call',
-                    'method': 'createProject',
-                    'header': '1233',
-                    'params': {
-                        'name' : 'Name of project',
-                        'everyonePermissions' : 'permissions'
-                    }
-                }),
-                    success: function(data){
-                    data = JSON.parse(data);
-                    if(data.success === true){
-                        $this.user.set(data.project);
-                        // $this.user.trigger('login');
-                    }else{
-                        error_message.html('No project was created');
-                    }
-                    submit_button.removeAttr('disabled');
-            });
-        },
         
         createLanguage: function() {
             $.ajax({
