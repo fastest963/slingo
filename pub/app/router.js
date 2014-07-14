@@ -6,7 +6,7 @@
             'adminProject' : 'adminProject',
 
             'adminProjectForm' : 'adminProjectForm',
-            'translate/:lang' : 'languageTranslation'
+            'translate/:proj/:lang' : 'languageTranslation'
 
         },
         home: function(){
@@ -35,11 +35,11 @@
             this.application.renderAdminProjectForm ();
         },
 
-        languageTranslation: function(lang){
+        languageTranslation: function(proj, lang){
             if(!this.application){
                 this.application = new slingo.Views.application();
             }
-            this.application.renderLanguageCollection(lang);
+            this.application.renderLanguageCollection(proj, lang);
         }
     });
 

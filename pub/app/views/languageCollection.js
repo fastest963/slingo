@@ -1,58 +1,38 @@
 (function(){
     slingo.Views = slingo.Views || {};
 
-    slingo.Views.header = Backbone.View.extend({
-        templatePath: 'app/templates/header.ejs',
+    slingo.Views.languageCollection = Backbone.View.extend({
+        templatePath: 'app/templates/language-collection.ejs',
         initialize: function(){
-            this.deferred = $.Deferred();
-            this.render();
-           
+            var $this = this;
+            //setTimeout(function  () {
+                $this.render();
+            //},0);
+            //this.render();
         },
         render: function(){
             $this = this;
-
             if(!this.template){
                 this.getTemplate(this.templatePath).done(function(template){
-
+                    //alert('called this ');
                     $this.template = template;
-                    console.log();
-                    $this.$el.html(template( $this.options.user.toJSON() ));
-                    
-                    $this.init();
-                    $this.deferred.resolve();
+                    $this.$el.html( template() );
+                    console.debug($this.el);
                 });
              }else{
-                this.$el.html(this.template(this.user.toJSON()));
+                this.$el.html(this.template());
              }
-             return this.deferred.promise();
-        },
-        init: function(){
-            this.$('#login').popover({
-                html : true,
-                placement: 'bottom',
-                content : function(){
-                   return $('#login-box').html()
-                }
-            });
         },
         events: {
-            'click #login a' : 'stopLoginAction',
-            'submit #login-form' : 'login'
+            'submit #language-collection form' : 'fetchLanguage'
         },
-        stopLoginAction: function(e){
-            e.preventDefault();
-        },
-        login: function(e){
+        fetchLanguage: function(e){
             e.preventDefault();
 
             var $this = this;
-            var username = this.$('#param-username').val();
-            var password = this.$('#param-password').val();
-            var error_message = this.$('.form-error-message');
-            var submit_button = this.$('button');
-            submit_button.attr('disabled', 'disabled');
-            error_message.html('');
-
+            var proj = this.$('#project-select').val();
+            var lang = this.$('#language-select').val();
+            /*
             $.ajax({
                 url : slingo.API_ENDPOINT,
                 // url : 'api.php',
@@ -77,6 +57,8 @@
                     submit_button.removeAttr('disabled');
                 }
             });
+            */
+            slingo.Router.navigate('translate/' + proj + '/' + lang);
         }
     });
 })();

@@ -9,9 +9,19 @@
             <h1>The World's Music Player In Every Language</h1>
             <p>Do you speak multiple languages? Help make Grooveshark even better. Help make a difference right away!</p>
 
+            <!--
             <input type="text" id="language-input" class="col-md-4 col-sm-4 col-xs-5" style="margin: 0 auto;" data-provide="typeahead" placeholder="Select a language" data-items="4" data-source='["Alabama","Alaska","Arizona","Arkansas","California","Colorado","Connecticut","Delaware","Florida","Georgia","Hawaii","Idaho","Illinois","Indiana","Iowa","Kansas","Kentucky","Louisiana","Maine","Maryland","Massachusetts","Michigan","Minnesota","Mississippi","Missouri","Montana","Nebraska","Nevada","New Hampshire","New Jersey","New Mexico","New York","North Dakota","North Carolina","Ohio","Oklahoma","Oregon","Pennsylvania","Rhode Island","South Carolina","South Dakota","Tennessee","Texas","Utah","Vermont","Virginia","Washington","West Virginia","Wisconsin","Wyoming"]' value=<%=lang%>>
 
             <a class="btn btn-primary btn-lg col-md-2 col-sm-2" role="button" id="translate-submit">Translate</a>
+
+            -->
+            <form>
+                <p class="">Let's translate </p><input type="text" id="language-input" data-provide="typeahead" placeholder="Select a language" data-items="4" data-source='["Alabama","Alaska","Arizona","Arkansas","California","Colorado","Connecticut","Delaware","Florida","Georgia","Hawaii","Idaho","Illinois","Indiana","Iowa","Kansas","Kentucky","Louisiana","Maine","Maryland","Massachusetts","Michigan","Minnesota","Mississippi","Missouri","Montana","Nebraska","Nevada","New Hampshire","New Jersey","New Mexico","New York","North Dakota","North Carolina","Ohio","Oklahoma","Oregon","Pennsylvania","Rhode Island","South Carolina","South Dakota","Tennessee","Texas","Utah","Vermont","Virginia","Washington","West Virginia","Wisconsin","Wyoming"]' value=<%=lang%>> 
+                in 
+                <input type="text" id="project-input" data-provide="typeahead" placeholder="Select a project" data-items="4" data-source='["Alabama","Alaska","Arizona","Arkansas","California","Colorado","Connecticut","Delaware","Florida","Georgia","Hawaii","Idaho","Illinois","Indiana","Iowa","Kansas","Kentucky","Louisiana","Maine","Maryland","Massachusetts","Michigan","Minnesota","Mississippi","Missouri","Montana","Nebraska","Nevada","New Hampshire","New Jersey","New Mexico","New York","North Dakota","North Carolina","Ohio","Oklahoma","Oregon","Pennsylvania","Rhode Island","South Carolina","South Dakota","Tennessee","Texas","Utah","Vermont","Virginia","Washington","West Virginia","Wisconsin","Wyoming"]' value=<%=proj%>>
+                <a class="btn btn-primary btn-lg" role="button" id="translate-submit">Go</a>
+            </form>
+
         </div>
         <div class="pull-right right-container">
             <ul>
