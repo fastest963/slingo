@@ -24,9 +24,10 @@
         translate: function(e){
             e.preventDefault();
 
+            var proj = this.$('#project-input').val();
             var lang = this.$('#language-input').val();
 
-            slingo.Router.navigate('translate/' + lang, {trigger: true});
+            slingo.Router.navigate('translate/' + proj + '/' + lang, {trigger: true});
         },
         renderHome: function(obj) {
 
@@ -40,6 +41,7 @@
                    }
                 }
             }else{
+                attrs['proj'] = '';
                 attrs['lang'] = '';
             }
 
@@ -52,11 +54,6 @@
             }else{
                 this.$el.html(this.template(attrs));
                 $this.init();
-            }
-
-            if(this.isDfd){
-                this.dfd.resolve();
-                this.isDfd = false;
             }
 
         },
@@ -117,31 +114,29 @@
             }
             
         },
-        renderLanguageCollection: function(lang){
+        renderLanguageCollection: function(proj, lang){
 
             var $this = this;
-            var attrs = {'lang': lang};
+            var attrs = {'proj': proj, 'lang': lang};
 
             if(!this.bodyContainer){
                 this.isDfd = true;
                 this.dfd.promise( this.renderHome(attrs) ).done(function(){
-                    if(!$this.languageTemplate){
-                        $this.getTemplate('app/templates/language-collection.ejs').done(function(template){
-                            $this.languageTemplate = template;
-                            $this.bodyContainer.append($this.languageTemplate());
-                        });
+                    if(!$this.languageCollection){
+                        $this.languageCollection = new slingo.Views.languageCollection();
+                        $this.bodyContainer.append($this.languageCollection.el);
                     }else{
-                        $this.bodyContainer.find('#language-collection').html(this.languageTemplate());
+                        console.log('searching for languageCollection');
+                        $this.bodyContainer.append(this.languageTemplate());
                     }
                 });
             }else{
-                if(!this.languageTemplate){
-                    this.getTemplate('app/templates/language-collection.ejs').done(function(template){
-                        $this.languageTemplate = template;
-                        $this.bodyContainer.append($this.languageTemplate());
-                    });
+                if(!$this.languageCollection){
+                    $this.languageCollection = new slingo.Views.languageCollection();
+                    $this.bodyContainer.append($this.languageCollection.el);
                 }else{
-                    this.bodyContainer.find('#language-collection').html(this.languageTemplate());
+                    console.log('searching for languageCollection');
+                    $this.bodyContainer.append('#language-collection').html(this.languageTemplate());
                 }
             }
         },
@@ -210,15 +205,28 @@
 
         init: function  () {
             
-            if(!this.header){
-              this.header = new slingo.Views.header({el : '#header', user: this.user});
-             }else{
-                 $('#header').html(this.header.el);
-             }
+            var $this = this;
+
             this.bodyContainer = this.$('#body');
             this.footerContainer = this.$('#footer');
 
+            if(!$this.header){
+                $this.header = new slingo.Views.header({el : '#header', user: $this.user, 'waitTillLoaded' : true}).render().done(function  () {
+                    if($this.isDfd){
+                        $this.dfd.resolve($this);
+                        $this.isDfd = false;
+                    }        
+                });
+            }else{
+                $('#header').html($this.header.el);
+                if(this.isDfd){
+                    this.dfd.resolve(this);
+                    this.isDfd = false;
+                }
+            }
+
             //this.dfd.resolve(this);
+            
         },
         getProjects: function() {
             $.ajax({

@@ -6,7 +6,7 @@
             'adminProject' : 'adminProject',
             'adminProjectEdit' : 'adminProjectEdit',
             'adminProjectForm' : 'adminProjectForm',
-            'translate/:lang' : 'languageTranslation'
+            'translate/:proj/:lang' : 'languageTranslation'
 
         },
         home: function(){
@@ -35,6 +35,7 @@
             this.application.renderAdminProjectForm ();
         },
 
+<<<<<<< HEAD
         adminProjectEdit: function(){
             if(!this.application){
                 this.application = new slingo.Views.application();
@@ -43,10 +44,13 @@
         },
 
         languageTranslation: function(lang){
+=======
+        languageTranslation: function(proj, lang){
+>>>>>>> 84fd346dea6bbc059ab09defff58953907515e19
             if(!this.application){
                 this.application = new slingo.Views.application();
             }
-            this.application.renderLanguageCollection(lang);
+            this.application.renderLanguageCollection(proj, lang);
         }
     });
 

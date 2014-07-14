@@ -113,6 +113,21 @@ body{
     color: #f1f2f4;
     padding: 100;
 }
+.welcome-board > .left-container form {
+    margin-top: 30px;
+}
+.welcome-board > .left-container form p {
+    display: inline-block;
+    vertical-align: bottom;
+    font-size: 28px;
+    margin: 0px 5px;
+}
+.welcome-board > .left-container form p {
+    display: inline-block;
+    vertical-align: middle;
+    font-size: 28px;
+    margin: 0px 5px;
+}
 .welcome-board > .right-container{
     height: 100%;
     width: 25%;
@@ -153,27 +168,80 @@ body{
     font-size: 40px;
 }
 #language-input {
-    padding: 5px;
-    height: 55px;
     outline: none;
-    color: #5a6171;
+    color: white;
+    border: none;
+    border-bottom: 1px solid white;
+    background: transparent;
+    font-size: 16px;
+}
+#language-input::-webkit-input-placeholder { /* WebKit browsers */
+    color: #f1f2f4;
+    font-size: 16px;
+}
+
+#language-input:-moz-placeholder { /* Mozilla Firefox 4 to 18 */
+    color: #f1f2f4;
+    font-size: 16px;
+}
+#language-input::-moz-placeholder { /* Mozilla Firefox 19+ */
+    color: #f1f2f4;
+    font-size: 16px;
+}
+#language-input:-ms-input-placeholder { /* Internet Explorer 10+ */
+    color: #f1f2f4;
+    font-size: 16px;
+}
+#project-input{
+    outline: none;
+    color: white;
+    border: none;
+    border-bottom: 1px solid white;
+    background: transparent;
+    font-size: 16px;
+}
+#project-input::-webkit-input-placeholder { /* WebKit browsers */
+    color: #f1f2f4;
+    font-size: 16px;
+}
+
+#project-input:-moz-placeholder { /* Mozilla Firefox 4 to 18 */
+    color: #f1f2f4;
+    font-size: 16px;
+}
+#project-input::-moz-placeholder { /* Mozilla Firefox 19+ */
+    color: #f1f2f4;
+    font-size: 16px;
+}
+#project-input:-ms-input-placeholder { /* Internet Explorer 10+ */
+    color: #f1f2f4;
+    font-size: 16px;
 }
 #translate-submit{
     color: white;
     background: #46be9c;
     border-color: #46be9c;
-    line-height: 1.7;
-    height: 55px;
+    height: 35px;
     border: 0 none;
     border-radius: 0px;
-    margin-left: 5px;
+    line-height: 0.6;
 }
 #language-collection{
     height: 100%;
     text-align: center;
+    margin: 4rem;
 }
-#language-collection > .buttons{
-    width: 50%;
+#language-collection > form select {
+    width: 20rem;
+}
+#language-collection > form button{
+    color: white;
+    background: #46be9c;
+    border-color: #46be9c;
+    height: 35px;
+    border: 0 none;
+    border-radius: 0px;
+    line-height: 0.6;
 }
 #footer {
     width: 100%;
