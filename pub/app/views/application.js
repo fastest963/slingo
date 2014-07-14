@@ -10,6 +10,8 @@
             this.isDfd = false;
             this.user = new slingo.Models.user();
             this.project = new slingo.Models.project();
+            this.projects = new slingo.Collections.projects();
+
             this.user.on('login', this.onLogin, this);
 
         },
@@ -126,7 +128,6 @@
                         $this.languageCollection = new slingo.Views.languageCollection();
                         $this.bodyContainer.append($this.languageCollection.el);
                     }else{
-                        console.log('searching for languageCollection');
                         $this.bodyContainer.append(this.languageTemplate());
                     }
                 });
@@ -135,8 +136,7 @@
                     $this.languageCollection = new slingo.Views.languageCollection();
                     $this.bodyContainer.append($this.languageCollection.el);
                 }else{
-                    console.log('searching for languageCollection');
-                    $this.bodyContainer.append('#language-collection').html(this.languageTemplate());
+                    $this.bodyContainer.append($this.languageCollection.el);
                 }
             }
         },
@@ -211,7 +211,8 @@
             this.footerContainer = this.$('#footer');
 
             if(!$this.header){
-                $this.header = new slingo.Views.header({el : '#header', user: $this.user, 'waitTillLoaded' : true}).render().done(function  () {
+                new slingo.Views.header({el : '#header', user: $this.user, 'waitTillLoaded' : true}).render().done(function  (header) {
+                    $this.header = header;
                     if($this.isDfd){
                         $this.dfd.resolve($this);
                         $this.isDfd = false;
@@ -225,10 +226,17 @@
                 }
             }
 
+            this.getProjects();
+
             //this.dfd.resolve(this);
             
         },
         getProjects: function() {
+
+            this.projects.fetch({data: JSON.stringify({method: 'listAllProjects', 'header' : '12'}), type: 'POST'});
+            slingo.debug(this.projects);
+            return;
+
             $.ajax({
                 url : slingo.API_ENDPOINT,
                 type : 'POST',

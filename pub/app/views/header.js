@@ -4,9 +4,8 @@
     slingo.Views.header = Backbone.View.extend({
         templatePath: 'app/templates/header.ejs',
         initialize: function(){
+            this.user = this.options.user;
             this.deferred = $.Deferred();
-            this.render();
-           
         },
         render: function(){
             $this = this;
@@ -15,11 +14,10 @@
                 this.getTemplate(this.templatePath).done(function(template){
 
                     $this.template = template;
-                    console.log();
-                    $this.$el.html(template( $this.options.user.toJSON() ));
+                    $this.$el.html(template( $this.user.toJSON() ));
                     
                     $this.init();
-                    $this.deferred.resolve();
+                    $this.deferred.resolve($this);
                 });
              }else{
                 this.$el.html(this.template(this.user.toJSON()));

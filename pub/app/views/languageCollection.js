@@ -4,20 +4,14 @@
     slingo.Views.languageCollection = Backbone.View.extend({
         templatePath: 'app/templates/language-collection.ejs',
         initialize: function(){
-            var $this = this;
-            //setTimeout(function  () {
-                $this.render();
-            //},0);
-            //this.render();
+            this.render();
         },
         render: function(){
             $this = this;
             if(!this.template){
                 this.getTemplate(this.templatePath).done(function(template){
-                    //alert('called this ');
                     $this.template = template;
                     $this.$el.html( template() );
-                    console.debug($this.el);
                 });
              }else{
                 this.$el.html(this.template());
