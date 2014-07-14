@@ -8,17 +8,17 @@
 
             this.dfd = $.Deferred();
             this.isDfd = false;
-
             this.user = new slingo.Models.user();
+            this.project = new slingo.Models.project();
             this.user.on('login', this.onLogin, this);
 
         },
         events: {
             'click #getProjects' : 'getProjects',
             'click #logout' : 'logout',
-            'click #createProject' : 'createProject',
             'click #createLanguage' : 'createLanguage',
-            'click #translate-submit' : 'translate'
+            'click #translate-submit' : 'translate',
+            'submit #project-form' : 'createProject'
         },
         translate: function(e){
             e.preventDefault();
@@ -178,7 +178,7 @@
         renderHeader: function(){
             this.header.render();
         },
-        
+
         init: function  () {
             
             if(!this.header){
@@ -219,7 +219,41 @@
                 }
             });
         },
+        createProject: function(e) {
+            e.preventDefault();
 
+            var $this = this;
+            var name = this.$('#param-projectname').val();
+            var error_message = this.$('.form-error-message');
+            var submit_button = this.$('button');
+            submit_button.attr('disabled', 'disabled');
+            error_message.html('');
+            $.ajax({
+                url : slingo.API_ENDPOINT,
+                type : 'POST',
+                data : JSON.stringify({
+                    'sessionID': '1234',
+                    'submitType': 'call',
+                    'method': 'createProject',
+                    'header': '1233',
+                    'params': {
+                        'name' : 'Name of project',
+                        'everyonePermissions' : 'permissions'
+                    }
+                }),
+                    success: function(data){
+                    data = JSON.parse(data);
+                    if(data.success === true){
+                        alert (name + " has been created ");
+
+                    }else{
+                        error_message.html('No project was created');
+                    }
+                    submit_button.removeAttr('disabled');
+             }
+            });
+        
+        },
         
         createLanguage: function() {
             $.ajax({

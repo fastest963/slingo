@@ -39,6 +39,7 @@
 
     <script type="text/javascript" src="app/resources/slingo.js"></script>
     <script type="text/javascript" src="app/models/user.js"></script>
+    <script type="text/javascript" src="app/models/project.js"></script>
     <script type="text/javascript" src="app/views/header.js"></script>
     <script type="text/javascript" src="app/views/application.js"></script>
     
