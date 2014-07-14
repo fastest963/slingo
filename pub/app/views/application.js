@@ -18,7 +18,8 @@
             'click #logout' : 'logout',
             'click #createLanguage' : 'createLanguage',
             'click #translate-submit' : 'translate',
-            'submit #project-form' : 'createProject'
+            'submit #project-form' : 'createProject',
+
         },
         translate: function(e){
             e.preventDefault();
@@ -174,6 +175,34 @@
             }
 
         },
+        renderAdminProjectEdit: function(){
+
+            var $this = this;
+
+            if(!this.bodyContainer){
+                this.isDfd = true;
+                this.dfd.promise( this.renderHome() ).done(function(){
+                    if(!$this.adminProjectEditTemplate){
+                        $this.getTemplate('app/templates/admin-project-edit.ejs').done(function(template){
+                            $this.adminProjectEditTemplate = template;
+                            $this.bodyContainer.html($this.adminProjectEditTemplate());
+                        });
+                    }else{
+                        $this.bodyContainer.html(this.adminProjectEditTemplate());
+                    }
+                });
+            }else{
+                if(!this.adminProjectEditTemplate){
+                    this.getTemplate('app/templates/admin-project-edit.ejs').done(function(template){
+                        $this.adminProjectEditTemplate = template;
+                        $this.bodyContainer.html($this.adminProjectEditTemplate());
+                    });
+                }else{
+                    this.bodyContainer.html(this.adminProjectEditTemplate());
+                }
+            }
+
+        },
 
         renderHeader: function(){
             this.header.render();
@@ -245,6 +274,8 @@
                     data = JSON.parse(data);
                     if(data.success === true){
                         alert (name + " has been created ");
+                        slingo.Router.navigate('adminProject', {trigger: true});
+
 
                     }else{
                         error_message.html('No project was created');

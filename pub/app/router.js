@@ -4,7 +4,7 @@
             '' : 'home',
             'adminUser' : 'adminUser',
             'adminProject' : 'adminProject',
-
+            'adminProjectEdit' : 'adminProjectEdit',
             'adminProjectForm' : 'adminProjectForm',
             'translate/:lang' : 'languageTranslation'
 
@@ -33,6 +33,13 @@
                 this.application = new slingo.Views.application();
             }
             this.application.renderAdminProjectForm ();
+        },
+
+        adminProjectEdit: function(){
+            if(!this.application){
+                this.application = new slingo.Views.application();
+            }
+            this.application.renderAdminProjectEdit ();
         },
 
         languageTranslation: function(lang){
