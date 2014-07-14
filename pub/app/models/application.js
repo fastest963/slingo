@@ -2,18 +2,13 @@
     
     slingo.Models = slingo.Models || {};
 
-    slingo.Models.project = Backbone.Model.extend({
-
-        idAtrribute : 'projectID',
+    slingo.Models.application = Backbone.Model.extend({
 
         defaults: {
             'name':'',
             'projectID':'',
             'languageID':'',
-            'file':'',
-            'displayName' : '',
-            'permissions' : []
-
+            'file':''
         },
 
         initialize: function(){
