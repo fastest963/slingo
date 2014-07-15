@@ -58,6 +58,7 @@
         renderAdminUser: function(){
 
             var $this = this;
+            
 
             if(!this.bodyContainer){
                 this.isDfd = true;
@@ -89,20 +90,25 @@
             }
 
         },
-        renderAdminProject: function(){
-
+        renderAdminProject: function(){ 
             var $this = this;
+            var attr = {'projects':this.projects.toJSON() };
 
 
             if(!this.bodyContainer){
                 this.isDfd = true;
                 this.dfd.promise( this.renderHome() ).done(function(){
-                    $this.bodyContainer.html( _.template( this.tpl.adminProjectTpl )() );
+
+                    slingo.debug("protein");
+
+                    $this.bodyContainer.html( _.template( $this.tpl.adminProjectTpl )(attr) );
                     /*
+>>>>>>> c3f5d59c68587596399d93be1dd830cbc22f59f0
                     if(!$this.adminProjectTemplate){
                         $this.getTemplate('app/templates/admin-project.ejs').done(function(template){
                             $this.adminProjectTemplate = template;
-                            $this.bodyContainer.html($this.adminProjectTemplate());
+                            slingo.debug(attr);
+                            $this.bodyContainer.html($this.adminProjectTemplate(attr));
                         });
                     }else{
                         $this.bodyContainer.html(this.adminProjectTemplate());
@@ -254,6 +260,7 @@
 
         },
         getProjects: function() {
+            slingo.debug("bag");
 
             var $this = this;
             var project_input = this.$('#project-input');
@@ -274,6 +281,12 @@
             }else{
                 var projs = $.map($this.projects.toJSON(), function(v){return v.displayName;});
                 project_input.data('source', projs);
+                if($this.isDfd){
+                    slingo.debug("something");
+                    slingo.debug($this.projects);
+                        $this.dfd.resolve($this);
+                        $this.isDfd = false;
+                    } 
 
                 if($this.isDfd){
                     $this.dfd.resolve($this);
