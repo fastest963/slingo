@@ -4,15 +4,15 @@
 
     slingo.Models.project = Backbone.Model.extend({
 
-        idAtrribute : 'projectID',
+        idAttribute : 'projectID',
 
         defaults: {
             'name':'',
             'projectID':'',
-            'languageID':'',
             'file':'',
             'displayName' : '',
-            'permissions' : []
+            'permissions' : [],
+            'id' : ''
 
         },
 

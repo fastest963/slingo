@@ -174,23 +174,28 @@ body{
     border-bottom: 1px solid white;
     background: transparent;
     font-size: 16px;
+    text-align: center;
 }
 #language-input::-webkit-input-placeholder { /* WebKit browsers */
     color: #f1f2f4;
     font-size: 16px;
+    text-align: center;
 }
 
 #language-input:-moz-placeholder { /* Mozilla Firefox 4 to 18 */
     color: #f1f2f4;
     font-size: 16px;
+    text-align: center;
 }
 #language-input::-moz-placeholder { /* Mozilla Firefox 19+ */
     color: #f1f2f4;
     font-size: 16px;
+    text-align: center;
 }
 #language-input:-ms-input-placeholder { /* Internet Explorer 10+ */
     color: #f1f2f4;
     font-size: 16px;
+    text-align: center;
 }
 #project-input{
     outline: none;
@@ -199,23 +204,28 @@ body{
     border-bottom: 1px solid white;
     background: transparent;
     font-size: 16px;
+    text-align: center;
 }
 #project-input::-webkit-input-placeholder { /* WebKit browsers */
     color: #f1f2f4;
     font-size: 16px;
+    text-align: center;
 }
 
 #project-input:-moz-placeholder { /* Mozilla Firefox 4 to 18 */
     color: #f1f2f4;
     font-size: 16px;
+    text-align: center;
 }
 #project-input::-moz-placeholder { /* Mozilla Firefox 19+ */
     color: #f1f2f4;
     font-size: 16px;
+    text-align: center;
 }
 #project-input:-ms-input-placeholder { /* Internet Explorer 10+ */
     color: #f1f2f4;
     font-size: 16px;
+    text-align: center;
 }
 #translate-submit{
     color: white;
