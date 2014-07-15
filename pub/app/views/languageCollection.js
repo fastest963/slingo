@@ -7,18 +7,33 @@
             this.render();
         },
         render: function(){
+            this.projects = this.options.projects;
+            this.urlAttrs = this.options.urlAttrs;
+
             $this = this;
             if(!this.template){
                 this.getTemplate(this.templatePath).done(function(template){
                     $this.template = template;
                     $this.$el.html( template() );
+                    $this.init();
                 });
              }else{
                 this.$el.html(this.template());
+                this.init();
              }
+             
         },
         events: {
             'submit #language-collection form' : 'fetchLanguage'
+        },
+        init : function  () {
+            
+            var $this = this;
+            var project_select = this.$('#project-select').empty();
+            var projects = $.each(this.projects.toJSON(), function(index, project){
+                project_select.append('<option' + ($this.urlAttrs.proj === project.displayName ? ' selected="selected" ' : '')  + ' >' + project.displayName + '</option>');
+            });
+
         },
         fetchLanguage: function(e){
             e.preventDefault();
