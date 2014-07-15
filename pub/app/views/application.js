@@ -6,6 +6,8 @@
         templatePath: 'app/templates/application.ejs',
         initialize: function(options) {
 
+            this.tpl = new slingo.Views.template();
+
             this.dfd = $.Deferred();
             this.isDfd = false;
             this.user = new slingo.Models.user();
@@ -48,16 +50,9 @@
                 attrs['lang'] = '';
             }
 
-            if(!this.template){
-                this.getTemplate(this.templatePath).done(function(template){
-                    $this.template = template;
-                    $this.$el.html(template(attrs));
-                    $this.init();
-                });
-            }else{
-                this.$el.html(this.template(attrs));
-                $this.init();
-            }
+            
+            this.$el.html(_.template( this.tpl.applicationTpl )(attrs))
+            this.init();
 
         },
         renderAdminUser: function(){
@@ -68,6 +63,8 @@
             if(!this.bodyContainer){
                 this.isDfd = true;
                 this.dfd.promise( this.renderHome() ).done(function(){
+                    $this.bodyContainer.html( _.template( $this.tpl.adminUserTpl ));
+                    /*
                     if(!$this.adminUserTemplate){
                         $this.getTemplate('app/templates/admin-user.ejs').done(function(template){
                             $this.adminUserTemplate = template;
@@ -76,8 +73,11 @@
                     }else{
                         $this.bodyContainer.html($this.adminUserTemplate());
                     }
+                    */
                 });
             }else{
+                $this.bodyContainer.html( _.template( $this.tpl.adminUserTpl ));
+                /*
                 if(!this.adminUserTemplate){
                     this.getTemplate('app/templates/admin-user.ejs').done(function(template){
                         $this.adminUserTemplate = template;
@@ -86,6 +86,7 @@
                 }else{
                     this.bodyContainer.html(this.adminUserTemplate());
                 }
+                */
             }
 
         },
@@ -97,7 +98,12 @@
             if(!this.bodyContainer){
                 this.isDfd = true;
                 this.dfd.promise( this.renderHome() ).done(function(){
+
                     slingo.debug("protein");
+
+                    $this.bodyContainer.html( _.template( $this.tpl.adminProjectTpl )(attr) );
+                    /*
+>>>>>>> c3f5d59c68587596399d93be1dd830cbc22f59f0
                     if(!$this.adminProjectTemplate){
                         $this.getTemplate('app/templates/admin-project.ejs').done(function(template){
                             $this.adminProjectTemplate = template;
@@ -107,8 +113,11 @@
                     }else{
                         $this.bodyContainer.html(this.adminProjectTemplate());
                     }
+                    */
                 });
             }else{
+                $this.bodyContainer.html( _.template( this.tpl.adminProjectTpl )() );
+                /*
                 if(!this.adminProjectTemplate){
                     this.getTemplate('app/templates/admin-project.ejs').done(function(template){
                         $this.adminProjectTemplate = template;
@@ -117,6 +126,7 @@
                 }else{
                     this.bodyContainer.html(this.adminProjectTemplate());
                 }
+                */
             }
             
         },
@@ -129,7 +139,7 @@
                 this.isDfd = true;
                 this.dfd.promise( this.renderHome(attrs) ).done(function(){
                     if(!$this.languageCollection){
-                        $this.languageCollection = new slingo.Views.languageCollection({ projects : $this.projects, urlAttrs : attrs});
+                        $this.languageCollection = new slingo.Views.languageCollection({ projects : $this.projects, urlAttrs : attrs, tpl : $this.tpl});
                         $this.bodyContainer.append($this.languageCollection.el);
                     }else{
                         $this.languageCollection.options.projects = $this.projects;
@@ -140,7 +150,7 @@
                 });
             }else{
                 if(!$this.languageCollection){
-                    $this.languageCollection = new slingo.Views.languageCollection({ projects : $this.projects, urlAttrs : attrs});
+                    $this.languageCollection = new slingo.Views.languageCollection({ projects : $this.projects, urlAttrs : attrs, tpl : $this.tpl});
                     $this.bodyContainer.append($this.languageCollection.el);
                 }else{
                     $this.languageCollection.options.projects = $this.projects;
@@ -159,6 +169,10 @@
             if(!this.bodyContainer){
                 this.isDfd = true;
                 this.dfd.promise( this.renderHome() ).done(function(){
+
+                    $this.bodyContainer.html( _.template( this.tpl.adminProjectFormTpl )() );
+
+                    /*
                     if(!$this.adminProjectFormTemplate){
                         $this.getTemplate('app/templates/admin-project-form.ejs').done(function(template){
                             $this.adminProjectFormTemplate = template;
@@ -167,8 +181,13 @@
                     }else{
                         $this.bodyContainer.html(this.adminProjectFormTemplate());
                     }
+                    */
                 });
             }else{
+
+                $this.bodyContainer.html( _.template( this.tpl.adminProjectFormTpl )() );
+
+                /*
                 if(!this.adminProjectFormTemplate){
                     this.getTemplate('app/templates/admin-project-form.ejs').done(function(template){
                         $this.adminProjectFormTemplate = template;
@@ -177,6 +196,7 @@
                 }else{
                     this.bodyContainer.html(this.adminProjectFormTemplate());
                 }
+                */
             }
 
         },
@@ -187,6 +207,10 @@
             if(!this.bodyContainer){
                 this.isDfd = true;
                 this.dfd.promise( this.renderHome() ).done(function(){
+
+                    $this.bodyContainer.html( _.template( this.tpl.adminProjectEditTpl )() );
+
+                    /*
                     if(!$this.adminProjectEditTemplate){
                         $this.getTemplate('app/templates/admin-project-edit.ejs').done(function(template){
                             $this.adminProjectEditTemplate = template;
@@ -195,8 +219,13 @@
                     }else{
                         $this.bodyContainer.html(this.adminProjectEditTemplate());
                     }
+                    */
                 });
             }else{
+
+                $this.bodyContainer.html( _.template( this.tpl.adminProjectEditTpl )() );
+
+                /*
                 if(!this.adminProjectEditTemplate){
                     this.getTemplate('app/templates/admin-project-edit.ejs').done(function(template){
                         $this.adminProjectEditTemplate = template;
@@ -205,6 +234,7 @@
                 }else{
                     this.bodyContainer.html(this.adminProjectEditTemplate());
                 }
+                */
             }
 
         },
@@ -218,22 +248,17 @@
             
             var $this = this;
 
-
             this.bodyContainer = this.$('#body');
             this.footerContainer = this.$('#footer');
 
             if(!$this.header){
-                new slingo.Views.header({el : '#header', user: $this.user, 'waitTillLoaded' : true}).render().done(function  (header) {
-                    $this.header = header;
-                           
-                });
+                this.header = new slingo.Views.header({el : '#header', user: $this.user, 'waitTillLoaded' : true, tpl: this.tpl}); 
+                       
             }else{
                 $('#header').html($this.header.el);
-                
             }
-            this.getProjects();
 
-            
+            this.getProjects();
 
             //this.dfd.resolve(this);
             
@@ -254,6 +279,11 @@
                         $this.dfd.resolve($this);
                         $this.isDfd = false;
                     } 
+
+                if($this.isDfd){
+                    $this.dfd.resolve($this);
+                    $this.isDfd = false;
+                }
 
             });
             
