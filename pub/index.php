@@ -44,6 +44,7 @@
     <script type="text/javascript" src="app/models/project.js"></script>
     <script type="text/javascript" src="app/collection/projects.js"></script>
     <script type="text/javascript" src="app/views/header.js"></script>
+    <script type="text/javascript" src="app/views/userProfile.js"></script>
     <script type="text/javascript" src="app/views/languageCollection.js"></script>
     <script type="text/javascript" src="app/views/application.js"></script>
     

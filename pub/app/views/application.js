@@ -24,6 +24,7 @@
             'click #createLanguage' : 'createLanguage',
             'click #translate-submit' : 'translate',
             'submit #project-form' : 'createProject',
+            'click #profile' : 'fetch'
 
         },
         translate: function(e){
@@ -34,6 +35,16 @@
 
             slingo.Router.navigate('translate/' + proj + '/' + lang, {trigger: true});
         },
+
+        fetch: function(e){
+            slingo.debug("sdfsdf");
+            e.preventDefault();
+
+            var $this = this;
+            var user = this.user.getCached(username);
+            slingo.Router.navigate('user/' + user);
+        },
+
         renderHome: function(obj) {
 
             var $this = this;
@@ -160,6 +171,37 @@
                 }
             }
         },
+        renderUserProfile: function(user){
+
+            var $this = this;
+            var attrs = {'user':user};
+
+            if(!this.bodyContainer){
+                this.isDfd = true;
+                this.dfd.promise( this.renderHome(attrs) ).done(function(){
+                    if(!$this.userProfile){
+                        $this.userProfile = new slingo.Views.userProfile({ user : $this.user, urlAttrs : attrs, tpl : $this.tpl});
+                        $this.bodyContainer.append($this.userProfile.el);
+                    }else{
+                        $this.userProfile.options.users = $this.users;
+                        $this.userProfile.options.urlAttrs = attrs;
+                        this.userProfile.render();
+                        $this.bodyContainer.append(this.userProfile.el);
+                    }
+                });
+            }else{
+                if(!$this.userProfile){
+                    $this.userProfile = new slingo.Views.userProfile({ users : $this.users, urlAttrs : attrs, tpl : $this.tpl});
+                    $this.bodyContainer.append($this.userProfile.el);
+                }else{
+                    $this.userProfile.options.users = $this.users;
+                    $this.userProfile.options.urlAttrs = attrs;
+                    this.userProfile.render();
+                    $this.bodyContainer.append($this.userProfile.el);
+                }
+            }
+        },
+
 
 
         renderAdminProjectForm: function(){
