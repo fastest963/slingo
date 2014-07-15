@@ -234,7 +234,6 @@
         },
 
         renderHeader: function(){
-            slingo.debug("hello");
             this.header.render();
         },
 
@@ -246,24 +245,33 @@
             this.footerContainer = this.$('#footer');
 
             if(!$this.header){
-                this.header = new slingo.Views.header({el : '#header', user: $this.user, 'waitTillLoaded' : true, tpl: this.tpl}); 
-                       
+                this.header = new slingo.Views.header({el : '#header', user: $this.user, tpl: this.tpl}); 
             }else{
                 $('#header').html($this.header.el);
             }
 
             this.getProjects();
 
-            //this.dfd.resolve(this);
-            
         },
         getProjects: function() {
 
             var $this = this;
             var project_input = this.$('#project-input');
 
-            this.projects.fetch({data: JSON.stringify({method: 'listAllProjects', 'header' : '12'}), type: 'POST'}).done(function  (data, success, xhr) {
-                
+            if(!this.projects || this.projects.length == 0){
+
+                this.projects.fetch({data: JSON.stringify({method: 'listAllProjects', 'header' : '12'}), type: 'POST'}).done(function  (data, success, xhr) {
+                    
+                    var projs = $.map($this.projects.toJSON(), function(v){return v.displayName;});
+                    project_input.data('source', projs);
+
+                    if($this.isDfd){
+                        $this.dfd.resolve($this);
+                        $this.isDfd = false;
+                    }
+
+                });
+            }else{
                 var projs = $.map($this.projects.toJSON(), function(v){return v.displayName;});
                 project_input.data('source', projs);
 
@@ -271,11 +279,8 @@
                     $this.dfd.resolve($this);
                     $this.isDfd = false;
                 }
-
-            });
+            }
             
-            
-
         },
 
         createProject: function(e) {
@@ -341,10 +346,9 @@
         },
 
         onLogout: function(){
-            slingo.debug("hello");
             this.user.clear().set(this.user.defaults);
             this.renderHeader();
-            
+            slingo.Router.navigate('/', {trigger : true});
         },
         load: function(view) {
             this.dfdChain.push(view);
