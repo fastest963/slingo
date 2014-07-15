@@ -9,11 +9,11 @@
         model : slingo.Models.project,
 
         parse : function(response) {
-            //delete response.errorCode;
-            
             var result = [];
             for(var project in response.projects){
-                result.push(project);
+                var p = response.projects[project];
+                p.permissions = [];
+                result.push(p);
             }
             
             return result;

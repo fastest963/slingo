@@ -10,6 +10,7 @@
             this.isDfd = false;
             this.user = new slingo.Models.user();
             this.project = new slingo.Models.project();
+
             this.projects = new slingo.Collections.projects();
 
             this.user.on('login', this.onLogin, this);
@@ -124,17 +125,23 @@
                 this.isDfd = true;
                 this.dfd.promise( this.renderHome(attrs) ).done(function(){
                     if(!$this.languageCollection){
-                        $this.languageCollection = new slingo.Views.languageCollection();
+                        $this.languageCollection = new slingo.Views.languageCollection({ projects : $this.projects, urlAttrs : attrs});
                         $this.bodyContainer.append($this.languageCollection.el);
                     }else{
-                        $this.bodyContainer.append(this.languageTemplate());
+                        $this.languageCollection.options.projects = $this.projects;
+                        $this.languageCollection.options.urlAttrs = attrs;
+                        this.languageCollection.render();
+                        $this.bodyContainer.append(this.languageCollection.el);
                     }
                 });
             }else{
                 if(!$this.languageCollection){
-                    $this.languageCollection = new slingo.Views.languageCollection();
+                    $this.languageCollection = new slingo.Views.languageCollection({ projects : $this.projects, urlAttrs : attrs});
                     $this.bodyContainer.append($this.languageCollection.el);
                 }else{
+                    $this.languageCollection.options.projects = $this.projects;
+                    $this.languageCollection.options.urlAttrs = attrs;
+                    this.languageCollection.render();
                     $this.bodyContainer.append($this.languageCollection.el);
                 }
             }
@@ -204,21 +211,18 @@
         },
         getProjects: function() {
 
-            this.projects.fetch({data: JSON.stringify({method: 'listAllProjects', 'header' : '12'}), type: 'POST'});
-            slingo.debug(this.projects);
-            return;
+            var $this = this;
+            var project_input = this.$('#project-input');
 
-            $.ajax({
-                url : slingo.API_ENDPOINT,
-                type : 'POST',
-                data : JSON.stringify({
-                    'header' : '12',
-                    'method' : 'listAllProjects'
-                }),
-                success: function(data) {
-                    slingo.debug(data);
-                }
+            this.projects.fetch({data: JSON.stringify({method: 'listAllProjects', 'header' : '12'}), type: 'POST'}).done(function  (data, success, xhr) {
+                
+                var projs = $.map($this.projects.toJSON(), function(v){return v.displayName;});
+                project_input.data('source', projs);
+
             });
+            
+            
+
         },
         logout: function() {
             $.ajax({
