@@ -7,48 +7,58 @@
             'adminProjectEdit' : 'adminProjectEdit',
             'adminProjectForm' : 'adminProjectForm',
             'translate/:proj/:lang' : 'languageTranslation'
-
         },
         home: function(){
             if(!this.application){
                 this.application = new slingo.Views.application();
+                this.application.load('renderHome');
+            }else{
+                this.application.renderHome();
             }
-            this.application.renderHome();
         },
         adminUser: function(){
             if(!this.application){
                 this.application = new slingo.Views.application();
+                this.application.load('renderAdminUser');
+            }else{
+                this.application.renderAdminUser();
             }
-            this.application.renderAdminUser();
         },
         adminProject: function(){
             if(!this.application){
                 this.application = new slingo.Views.application();
+                this.application.load('renderAdminProject');
+            }else{
+                this.application.renderAdminProject();
             }
-            this.application.renderAdminProject();
         },
 
         adminProjectForm: function(){
             if(!this.application){
                 this.application = new slingo.Views.application();
+                this.application.load('renderAdminProjectForm');
+            }else{
+                this.application.renderAdminProjectForm ();
             }
-            this.application.renderAdminProjectForm ();
         },
 
         adminProjectEdit: function(){
             if(!this.application){
                 this.application = new slingo.Views.application();
+                this.application.load('renderAdminProjectEdit');
+            }else{
+                this.application.renderAdminProjectEdit ();
             }
-            this.application.renderAdminProjectEdit ();
         },
-
 
         languageTranslation: function(proj, lang){
 
             if(!this.application){
                 this.application = new slingo.Views.application();
+                this.application.load('renderLanguageCollection', [proj, lang]);
+            }else{
+                this.application.renderLanguageCollection(proj, lang);
             }
-            this.application.renderLanguageCollection(proj, lang);
         }
     });
 
