@@ -35,6 +35,7 @@
         },
         events: {
             'click #login a' : 'stopLoginAction',
+            'click #logout' : 'logout',
             'submit #login-form' : 'login'
         },
         stopLoginAction: function(e){
@@ -75,6 +76,27 @@
                     submit_button.removeAttr('disabled');
                 }
             });
-        }
+        },
+
+        logout: function(e) {
+            e.preventDefault();
+
+            var $this = this;
+            $.ajax({
+                url : slingo.API_ENDPOINT,
+                type : 'POST',
+                data : JSON.stringify({
+                    'sessionID': '1234',
+                    'submitType': 'call',
+                    'method': 'logout',
+                    'header': '1233'
+                }),
+                success: function(data) {
+                    $this.user.trigger('logout');
+                        
+                    
+                }
+            });
+        },
     });
 })();

@@ -13,11 +13,11 @@
             this.projects = new slingo.Collections.projects();
 
             this.user.on('login', this.onLogin, this);
+            this.user.on('logout', this.onLogout, this);
 
         },
         events: {
             'click #getProjects' : 'getProjects',
-            'click #logout' : 'logout',
             'click #createLanguage' : 'createLanguage',
             'click #translate-submit' : 'translate',
             'submit #project-form' : 'createProject',
@@ -200,6 +200,7 @@
         },
 
         renderHeader: function(){
+            slingo.debug("hello");
             this.header.render();
         },
 
@@ -249,21 +250,7 @@
                 }
             });
         },
-        logout: function() {
-            $.ajax({
-                url : slingo.API_ENDPOINT,
-                type : 'POST',
-                data : JSON.stringify({
-                    'sessionID': '1234',
-                    'submitType': 'call',
-                    'method': 'logout',
-                    'header': '1233'
-                }),
-                success: function(data) {
-                    slingo.debug(data);
-                }
-            });
-        },
+
         createProject: function(e) {
             e.preventDefault();
 
@@ -324,6 +311,13 @@
         },
         onLogin: function(){
             this.renderHeader();
+        },
+
+        onLogout: function(){
+            slingo.debug("hello");
+            this.user.clear().set(this.user.defaults);
+            this.renderHeader();
+            
         },
         load: function(view) {
             this.dfdChain.push(view);
