@@ -1,9 +1,7 @@
-<?php
-	
-?>
 <html>
 <head>
     <title></title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 </head>
 <body>
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans:400,600,700">
@@ -28,6 +26,10 @@
         slingo.API_ENDPOINT = 'http://translate-james.dev.grooveshark.com/api.php';
         // slingo.API_ENDPOINT = 'api.php';
     </script>
+    <?php
+    include_once('app/templates/global-template.html');
+    ?>
+
     <script type="text/javascript" src="app/resources/jquery.js"></script>
     <script type="text/javascript" src="app/resources/underscore.js"></script>
     <script type="text/javascript" src="app/resources/lodash.js"></script>

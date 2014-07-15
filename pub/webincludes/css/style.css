@@ -118,14 +118,8 @@ body{
 }
 .welcome-board > .left-container form p {
     display: inline-block;
-    vertical-align: bottom;
-    font-size: 28px;
-    margin: 0px 5px;
-}
-.welcome-board > .left-container form p {
-    display: inline-block;
     vertical-align: middle;
-    font-size: 28px;
+    font-size: 22px;
     margin: 0px 5px;
 }
 .welcome-board > .right-container{

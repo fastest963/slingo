@@ -4,12 +4,18 @@
     slingo.Views.header = Backbone.View.extend({
         templatePath: 'app/templates/header.ejs',
         initialize: function(){
+            this.tpl = this.options.tpl;
             this.user = this.options.user;
             this.deferred = $.Deferred();
+            this.render();
         },
         render: function(){
             $this = this;
 
+            $this.$el.html(_.template( this.tpl.headerTpl )( $this.user.toJSON() ) );
+            $this.init();
+
+            /*
             if(!this.template){
                 this.getTemplate(this.templatePath).done(function(template){
 
@@ -23,6 +29,7 @@
                 this.$el.html(this.template(this.user.toJSON()));
              }
              return this.deferred.promise();
+             */
         },
         init: function(){
             this.$('#login').popover({
