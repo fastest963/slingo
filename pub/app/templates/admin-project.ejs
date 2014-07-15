@@ -14,10 +14,12 @@
 		</tr>
 	</thead>
 	<tbody>
+	<% _.each(projects, function(project) { %> 
 		<tr>
-			<td><a href="#adminProjectEdit"> Andriod</a></td>
+			<td><a href="#adminProjectEdit"> <%=project.displayName %> </a></td>
 
 		</tr>
+	<% }); %>
 	</tbody>
 	</table>
 </div>

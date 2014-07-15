@@ -63,6 +63,7 @@
         renderAdminUser: function(){
 
             var $this = this;
+            
 
             if(!this.bodyContainer){
                 this.isDfd = true;
@@ -88,18 +89,20 @@
             }
 
         },
-        renderAdminProject: function(){
-
+        renderAdminProject: function(){ 
             var $this = this;
+            var attr = {'projects':this.projects.toJSON() };
 
 
             if(!this.bodyContainer){
                 this.isDfd = true;
                 this.dfd.promise( this.renderHome() ).done(function(){
+                    slingo.debug("protein");
                     if(!$this.adminProjectTemplate){
                         $this.getTemplate('app/templates/admin-project.ejs').done(function(template){
                             $this.adminProjectTemplate = template;
-                            $this.bodyContainer.html($this.adminProjectTemplate());
+                            slingo.debug(attr);
+                            $this.bodyContainer.html($this.adminProjectTemplate(attr));
                         });
                     }else{
                         $this.bodyContainer.html(this.adminProjectTemplate());
@@ -215,31 +218,28 @@
             
             var $this = this;
 
+
             this.bodyContainer = this.$('#body');
             this.footerContainer = this.$('#footer');
 
             if(!$this.header){
                 new slingo.Views.header({el : '#header', user: $this.user, 'waitTillLoaded' : true}).render().done(function  (header) {
                     $this.header = header;
-                    if($this.isDfd){
-                        $this.dfd.resolve($this);
-                        $this.isDfd = false;
-                    }        
+                           
                 });
             }else{
                 $('#header').html($this.header.el);
-                if(this.isDfd){
-                    this.dfd.resolve(this);
-                    this.isDfd = false;
-                }
+                
             }
-
             this.getProjects();
+
+            
 
             //this.dfd.resolve(this);
             
         },
         getProjects: function() {
+            slingo.debug("bag");
 
             var $this = this;
             var project_input = this.$('#project-input');
@@ -248,6 +248,12 @@
                 
                 var projs = $.map($this.projects.toJSON(), function(v){return v.displayName;});
                 project_input.data('source', projs);
+                if($this.isDfd){
+                    slingo.debug("something");
+                    slingo.debug($this.projects);
+                        $this.dfd.resolve($this);
+                        $this.isDfd = false;
+                    } 
 
             });
             
