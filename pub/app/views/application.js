@@ -238,7 +238,15 @@
         
         },
         
-        createLanguage: function() {
+        createLanguage: function(e) {
+            e.preventDefault();
+
+            var $this = this;
+            var name = this.$('#param-languagename').val();
+            var error_message = this.$('.form-error-message');
+            var submit_button = this.$('button');
+            submit_button.attr('disabled', 'disabled');
+            error_message.html('');
             $.ajax({
                 url : slingo.API_ENDPOINT,
                 type : 'POST',
@@ -254,7 +262,16 @@
                     }
                 }),
                 success: function(data) {
-                    slingo.debug(data);
+                data = JSON.parse(data);
+                if(data.success === true){
+                    alert (name + " has been created ");
+                    slingo.Router.navigate('adminProjectEdit', {trigger: true});
+
+
+                }else{
+                    error_message.html('No project was created');
+                }
+                submit_button.removeAttr('disabled');
                 }
             });
         },
@@ -303,6 +320,34 @@
 
             }
 
+        },
+
+        renderProject: function(project){
+            
+            var $this = this;
+
+            if(!this.bodyContainer){
+                this.isDfd = true;
+                this.dfd.promise( this.renderHome() ).done(function(){
+
+                    $this.bodyContainer.html( _.template( $this.tpl.adminProjectEditTpl )(profile) );
+
+                });
+            }else{
+
+                $this.bodyContainer.html( _.template( $this.tpl.adminProjectEditTpl  )(profile) );
+
+            }
+
+        },
+
+        fetchProject: function(e){
+            e.preventDefault();
+
+            var $this = this;
+            var project = this.project.get("displayName");
+            slingo.Router.navigate('project/' + project, {trigger: true});
+        
         },
 
         checkLogin: function() {
