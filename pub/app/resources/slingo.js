@@ -1,5 +1,8 @@
 (function(){
 
+    // send ajax request with cookies
+    $.ajaxSetup({xhrFields:{withCredentials: true}});
+
     Backbone.View.prototype.getTemplate = function(url) {
         var deferred = $.Deferred();
         
@@ -16,6 +19,12 @@
         return deferred.promise( req() );
     };
 
+    Backbone.Collection.prototype.toJSONObject = function(){
+        return $.map(this.models, function(model) {
+            return model.toJSON();
+        })
+    };
+
     slingo.Views = slingo.Views || {};
 
     slingo.Views.template = Backbone.View.extend({
@@ -29,6 +38,7 @@
             this.adminProjectTpl = this.$('#adminProject_tpl').html();
             this.adminProjectFormTpl = this.$('#adminProjectForm_tpl').html();
             this.adminProjectEditTpl = this.$('#adminProjectEdit_tpl').html();
+            this.profileTpl = this.$('#profile_tpl').html();
         }
     })
 

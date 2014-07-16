@@ -4,38 +4,33 @@
     slingo.Views.header = Backbone.View.extend({
         templatePath: 'app/templates/header.ejs',
         initialize: function(){
+            this.tpl = this.options.tpl;
             this.user = this.options.user;
             this.deferred = $.Deferred();
+            this.render();
         },
         render: function(){
             $this = this;
 
-            if(!this.template){
-                this.getTemplate(this.templatePath).done(function(template){
-
-                    $this.template = template;
-                    $this.$el.html(template( $this.user.toJSON() ));
-                    
-                    $this.init();
-                    $this.deferred.resolve($this);
-                });
-             }else{
-                this.$el.html(this.template(this.user.toJSON()));
-             }
-             return this.deferred.promise();
+            $this.$el.html(_.template( this.tpl.headerTpl )( $this.user.toJSON() ) );
+            $this.init();
         },
         init: function(){
+            var $this = this;
+
             this.$('#login').popover({
                 html : true,
+                trigger : 'click',
                 placement: 'bottom',
                 content : function(){
-                   return $('#login-box').html()
+                   return $('#login-box').html();
                 }
             });
         },
         events: {
             'click #login a' : 'stopLoginAction',
             'click #logout' : 'logout',
+            'click #profile' : 'profile',
             'submit #login-form' : 'login'
         },
         stopLoginAction: function(e){
@@ -57,12 +52,11 @@
                 // url : 'api.php',
                 type : 'POST',
                 data : JSON.stringify({
-                    'header' : '12',
+                    'header' : {},
                     'params' : {
                         'username': username,
                         'password': password,
                     },
-                    'submitType' : 'call',
                     'method' : 'login'
                 }),
                 success: function(data){
@@ -86,10 +80,9 @@
                 url : slingo.API_ENDPOINT,
                 type : 'POST',
                 data : JSON.stringify({
-                    'sessionID': '1234',
-                    'submitType': 'call',
+                    'params' : {},
                     'method': 'logout',
-                    'header': '1233'
+                    'header': {}
                 }),
                 success: function(data) {
                     $this.user.trigger('logout');
@@ -98,14 +91,14 @@
                 }
             });
         },
-            profile: function(e){
+
+        profile: function(e){
             e.preventDefault();
 
             var $this = this;
-            var user = this.user.getCached(username);
-            slingo.Router.navigate('user/' + user);
-        }
-
+            var user = this.user.get("username");
+            slingo.Router.navigate('user/' + user, {trigger: true});
         
+        }
     });
 })();

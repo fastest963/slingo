@@ -10,6 +10,11 @@
     <link href="webincludes/css/style.css" rel="stylesheet">
     <div id="main">
     </div>
+    
+    <?php
+    include_once('app/templates/global-template.html');
+    ?>
+
     <script>
         var slingo = window.slingo = {
             DEBUG_MODE : true
@@ -26,9 +31,6 @@
         slingo.API_ENDPOINT = 'http://translate-james.dev.grooveshark.com/api.php';
         // slingo.API_ENDPOINT = 'api.php';
     </script>
-    <?php
-    include_once('app/templates/global-template.html');
-    ?>
 
     <script type="text/javascript" src="app/resources/jquery.js"></script>
     <script type="text/javascript" src="app/resources/underscore.js"></script>
@@ -44,7 +46,6 @@
     <script type="text/javascript" src="app/models/project.js"></script>
     <script type="text/javascript" src="app/collection/projects.js"></script>
     <script type="text/javascript" src="app/views/header.js"></script>
-    <script type="text/javascript" src="app/views/userProfile.js"></script>
     <script type="text/javascript" src="app/views/languageCollection.js"></script>
     <script type="text/javascript" src="app/views/application.js"></script>
     

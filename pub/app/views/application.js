@@ -9,6 +9,7 @@
             this.tpl = new slingo.Views.template();
 
             this.dfd = $.Deferred();
+            this.dfd2 = $.Deferred();
             this.isDfd = false;
             this.user = new slingo.Models.user();
             this.project = new slingo.Models.project();
@@ -24,7 +25,6 @@
             'click #createLanguage' : 'createLanguage',
             'click #translate-submit' : 'translate',
             'submit #project-form' : 'createProject',
-            'click #profile' : 'fetch'
 
         },
         translate: function(e){
@@ -35,16 +35,6 @@
 
             slingo.Router.navigate('translate/' + proj + '/' + lang, {trigger: true});
         },
-
-        fetch: function(e){
-            slingo.debug("sdfsdf");
-            e.preventDefault();
-
-            var $this = this;
-            var user = this.user.getCached(username);
-            slingo.Router.navigate('user/' + user);
-        },
-
         renderHome: function(obj) {
 
             var $this = this;
@@ -60,7 +50,6 @@
                 attrs['proj'] = '';
                 attrs['lang'] = '';
             }
-
             
             this.$el.html(_.template( this.tpl.applicationTpl )(attrs))
             this.init();
@@ -70,74 +59,33 @@
 
             var $this = this;
             
-
             if(!this.bodyContainer){
                 this.isDfd = true;
                 this.dfd.promise( this.renderHome() ).done(function(){
                     $this.bodyContainer.html( _.template( $this.tpl.adminUserTpl ));
-                    /*
-                    if(!$this.adminUserTemplate){
-                        $this.getTemplate('app/templates/admin-user.ejs').done(function(template){
-                            $this.adminUserTemplate = template;
-                            $this.bodyContainer.html($this.adminUserTemplate());
-                        });
-                    }else{
-                        $this.bodyContainer.html($this.adminUserTemplate());
-                    }
-                    */
                 });
             }else{
                 $this.bodyContainer.html( _.template( $this.tpl.adminUserTpl ));
-                /*
-                if(!this.adminUserTemplate){
-                    this.getTemplate('app/templates/admin-user.ejs').done(function(template){
-                        $this.adminUserTemplate = template;
-                        $this.bodyContainer.html($this.adminUserTemplate());
-                    });
-                }else{
-                    this.bodyContainer.html(this.adminUserTemplate());
-                }
-                */
             }
 
         },
         renderAdminProject: function(){ 
+
             var $this = this;
-            var attr = {'projects':this.projects.toJSON() };
-
-
+            var attr = { 'projects' :  '' };
+            
             if(!this.bodyContainer){
                 this.isDfd = true;
-                this.dfd.promise( this.renderHome() ).done(function(){
-
-                    slingo.debug("protein");
-
+                this.dfd.promise( this.renderHome() ).done(function(data){
+                    attr.projects = $this.projects.toJSONObject();
                     $this.bodyContainer.html( _.template( $this.tpl.adminProjectTpl )(attr) );
-                    /*
->>>>>>> c3f5d59c68587596399d93be1dd830cbc22f59f0
-                    if(!$this.adminProjectTemplate){
-                        $this.getTemplate('app/templates/admin-project.ejs').done(function(template){
-                            $this.adminProjectTemplate = template;
-                            slingo.debug(attr);
-                            $this.bodyContainer.html($this.adminProjectTemplate(attr));
-                        });
-                    }else{
-                        $this.bodyContainer.html(this.adminProjectTemplate());
-                    }
-                    */
                 });
             }else{
-                $this.bodyContainer.html( _.template( this.tpl.adminProjectTpl )() );
-                /*
-                if(!this.adminProjectTemplate){
-                    this.getTemplate('app/templates/admin-project.ejs').done(function(template){
-                        $this.adminProjectTemplate = template;
-                        $this.bodyContainer.html($this.adminProjectTemplate());
-                    });
-                }else{
-                    this.bodyContainer.html(this.adminProjectTemplate());
-                }
-                */
+                this.isDfd = true;
+                this.dfd.promise( this.getProjects() ).done(function() {
+                    attr.projects = $this.projects.toJSONObject();
+                    $this.bodyContainer.html( _.template( $this.tpl.adminProjectTpl )(attr) );                    
+                })
             }
             
         },
@@ -171,37 +119,6 @@
                 }
             }
         },
-        renderUserProfile: function(user){
-
-            var $this = this;
-            var attrs = {'user':user};
-
-            if(!this.bodyContainer){
-                this.isDfd = true;
-                this.dfd.promise( this.renderHome(attrs) ).done(function(){
-                    if(!$this.userProfile){
-                        $this.userProfile = new slingo.Views.userProfile({ user : $this.user, urlAttrs : attrs, tpl : $this.tpl});
-                        $this.bodyContainer.append($this.userProfile.el);
-                    }else{
-                        $this.userProfile.options.users = $this.users;
-                        $this.userProfile.options.urlAttrs = attrs;
-                        this.userProfile.render();
-                        $this.bodyContainer.append(this.userProfile.el);
-                    }
-                });
-            }else{
-                if(!$this.userProfile){
-                    $this.userProfile = new slingo.Views.userProfile({ users : $this.users, urlAttrs : attrs, tpl : $this.tpl});
-                    $this.bodyContainer.append($this.userProfile.el);
-                }else{
-                    $this.userProfile.options.users = $this.users;
-                    $this.userProfile.options.urlAttrs = attrs;
-                    this.userProfile.render();
-                    $this.bodyContainer.append($this.userProfile.el);
-                }
-            }
-        },
-
 
 
         renderAdminProjectForm: function(){
@@ -211,34 +128,10 @@
             if(!this.bodyContainer){
                 this.isDfd = true;
                 this.dfd.promise( this.renderHome() ).done(function(){
-
                     $this.bodyContainer.html( _.template( this.tpl.adminProjectFormTpl )() );
-
-                    /*
-                    if(!$this.adminProjectFormTemplate){
-                        $this.getTemplate('app/templates/admin-project-form.ejs').done(function(template){
-                            $this.adminProjectFormTemplate = template;
-                            $this.bodyContainer.html($this.adminProjectFormTemplate());
-                        });
-                    }else{
-                        $this.bodyContainer.html(this.adminProjectFormTemplate());
-                    }
-                    */
                 });
             }else{
-
                 $this.bodyContainer.html( _.template( this.tpl.adminProjectFormTpl )() );
-
-                /*
-                if(!this.adminProjectFormTemplate){
-                    this.getTemplate('app/templates/admin-project-form.ejs').done(function(template){
-                        $this.adminProjectFormTemplate = template;
-                        $this.bodyContainer.html($this.adminProjectFormTemplate());
-                    });
-                }else{
-                    this.bodyContainer.html(this.adminProjectFormTemplate());
-                }
-                */
             }
 
         },
@@ -249,88 +142,62 @@
             if(!this.bodyContainer){
                 this.isDfd = true;
                 this.dfd.promise( this.renderHome() ).done(function(){
-
                     $this.bodyContainer.html( _.template( this.tpl.adminProjectEditTpl )() );
-
-                    /*
-                    if(!$this.adminProjectEditTemplate){
-                        $this.getTemplate('app/templates/admin-project-edit.ejs').done(function(template){
-                            $this.adminProjectEditTemplate = template;
-                            $this.bodyContainer.html($this.adminProjectEditTemplate());
-                        });
-                    }else{
-                        $this.bodyContainer.html(this.adminProjectEditTemplate());
-                    }
-                    */
                 });
             }else{
-
                 $this.bodyContainer.html( _.template( this.tpl.adminProjectEditTpl )() );
-
-                /*
-                if(!this.adminProjectEditTemplate){
-                    this.getTemplate('app/templates/admin-project-edit.ejs').done(function(template){
-                        $this.adminProjectEditTemplate = template;
-                        $this.bodyContainer.html($this.adminProjectEditTemplate());
-                    });
-                }else{
-                    this.bodyContainer.html(this.adminProjectEditTemplate());
-                }
-                */
             }
 
         },
 
         renderHeader: function(){
-            slingo.debug("hello");
             this.header.render();
         },
 
         init: function  () {
-            
             var $this = this;
 
             this.bodyContainer = this.$('#body');
             this.footerContainer = this.$('#footer');
 
             if(!$this.header){
-                this.header = new slingo.Views.header({el : '#header', user: $this.user, 'waitTillLoaded' : true, tpl: this.tpl}); 
-                       
+                this.header = new slingo.Views.header({el : '#header', user: $this.user, tpl: this.tpl}); 
             }else{
                 $('#header').html($this.header.el);
             }
 
             this.getProjects();
 
-            //this.dfd.resolve(this);
-            
         },
         getProjects: function() {
-            slingo.debug("bag");
 
             var $this = this;
             var project_input = this.$('#project-input');
 
-            this.projects.fetch({data: JSON.stringify({method: 'listAllProjects', 'header' : '12'}), type: 'POST'}).done(function  (data, success, xhr) {
+            if(!this.projects || this.projects.length == 0){
+
+                this.projects.fetch({data: JSON.stringify({method: 'listAllProjects', 'header' : '12'}), type: 'POST'}).done(function  (data, success, xhr) {
+                    
+                    var projs = $.map($this.projects.toJSON(), function(v){return v.displayName;});
+                    project_input.data('source', projs);
+
+                    if($this.isDfd){
+                        $this.isDfd = false;
+                        $this.dfd.resolve($this);
+                    }
+
+                });
+            }else{
                 
                 var projs = $.map($this.projects.toJSON(), function(v){return v.displayName;});
                 project_input.data('source', projs);
+                
                 if($this.isDfd){
-                    slingo.debug("something");
-                    slingo.debug($this.projects);
-                        $this.dfd.resolve($this);
-                        $this.isDfd = false;
-                    } 
-
-                if($this.isDfd){
-                    $this.dfd.resolve($this);
                     $this.isDfd = false;
+                    $this.dfd.resolve($this);
                 }
-
-            });
+            }
             
-            
-
         },
 
         createProject: function(e) {
@@ -396,23 +263,64 @@
         },
 
         onLogout: function(){
-            slingo.debug("hello");
             this.user.clear().set(this.user.defaults);
             this.renderHeader();
-            
+            slingo.Router.navigate('/', {trigger : true});
         },
-        load: function(view) {
-            this.dfdChain.push(view);
+        load: function(view, options) {
+            var $this = this;
+            this.isDfd = true;
+            this.dfd.promise( this.checkLogin() ).then(function(data) {
 
-            this.dfd.promise( this.renderHome() ).then(function(scope){
-                
-                if(scope.dfdChain.length > 0){
-                    var fn = scope[scope.dfdChain[0]];
-                    fn.apply(scope, null);
-                    scope.dfdChain = [];
+                $this.dfd = $.Deferred();
+
+                if(data.userID == null){
+                    slingo.Router.navigate('/');
+                    $this.renderHome();
+                }else{
+                    $this.user.set(data);
+                    $this[view].call($this, options);
                 }
             });
 
+        },
+
+        renderProfile: function(user){
+            
+            var $this = this;
+
+            if(!this.bodyContainer){
+                this.isDfd = true;
+                this.dfd.promise( this.renderHome() ).done(function(){
+
+                    $this.bodyContainer.html( _.template( $this.tpl.profileTpl )(user) );
+
+                });
+            }else{
+
+                $this.bodyContainer.html( _.template( $this.tpl.profileTpl  )(user) );
+
+            }
+
+        },
+
+        checkLogin: function() {
+
+            var $this = this;
+            $.ajax({
+                url : slingo.API_ENDPOINT,
+                type : 'POST',
+                data : JSON.stringify({
+                    'method': 'getLoggedInUser',
+                    'header' : {},
+                    'params' : {}
+                }),
+                success: function(data) {
+                    data = JSON.parse(data);
+                    $this.isDfd = false;
+                    $this.dfd.resolve(data);
+                }
+            });
         }
 
     });
