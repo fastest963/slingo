@@ -5,18 +5,22 @@
         initialize: function(){
             this.render();
         },
-        render: function(){
+        render: function(el){
 
+            if(el){
+                this.$el = el;
+            }
             this.tpl = this.options.tpl;
             this.attrs = this.options.attrs;
             this.projects = this.options.projects;
 
             this.$el.html( _.template (this.tpl.adminProjectTpl)( this.attrs ) );
 
-            this.projects_table = this.$('table');
+            this.projects_table = this.$('table tbody');
 
             this.getProjects();
-            return this.el;
+
+            return this.$el;
         },
         events: {
             
@@ -28,16 +32,10 @@
             if(!this.projects || this.projects.length == 0){
 
                 this.projects.fetch({data: JSON.stringify({method: 'listAllProjects', 'header' : {}}), type: 'POST'}).done(function(data, success, xhr) {
-                    var projs = $.map($this.projects.toJSON(), function(v){return v.displayName;});
-                    
+                    $this.fetchAll();
                 });
 
             }else{
-                /*
-                var projs = $.map($this.projects.toJSON(), function(v){return v.displayName;});
-                //project_input.data('source', projs);
-                slingo.debug(projs);
-                */
                 this.fetchAll();
             }
         },
