@@ -248,19 +248,7 @@
                 </tr>
             </thead>
             <tbody>
-                <% _.each(projects, function(project){ %>
-
-                    <tr>
-
-                        <td> <a href = "#adminProjectEdit"><%=project.displayName%> </td>
-
-
-
-                    </tr>
-                
-                <% }); %>
-                
-
+              
             </tbody>
         </table>
     </div>
@@ -374,4 +362,12 @@
       </div>
     </div>
     </div>
+</script>
+
+<script type="text/template" id="project_tpl">
+  <tr>
+    <td>
+      <%=displayName %>
+    </td>
+  </tr>
 </script>
