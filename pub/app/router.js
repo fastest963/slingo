@@ -1,6 +1,7 @@
 (function(){
     var slingoRouter = Backbone.Router.extend({
         routes : {
+            'home' : 'home',
             '' : 'home',
             'adminUser' : 'adminUser',
             'adminProject' : 'adminProject',
@@ -71,8 +72,7 @@
                 this.application = new slingo.Views.application();
                 this.application.load('renderProfile' , user);
             }else{
-            this.application.renderProfile(user);
-
+                this.application.renderProfile(user);
             }
 
         },
