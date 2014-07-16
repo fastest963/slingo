@@ -114,6 +114,7 @@
                         this.languageCollection.render();
                         $this.bodyContainer.append(this.languageCollection.el);
                     }
+                    $this.animatedScrollTo($this.languageCollection.el);
                 });
             }else{
                 if(!$this.languageCollection){
@@ -125,9 +126,16 @@
                     this.languageCollection.render();
                     $this.bodyContainer.append($this.languageCollection.el);
                 }
+                $this.animatedScrollTo($this.languageCollection.el);
             }
+
         },
 
+        animatedScrollTo: function(el) {
+            $('html, body').animate({
+                scrollTop : $(el).offset().top - 200
+            }, 2000)
+        },
 
         renderAdminProjectForm: function(){
 
@@ -159,6 +167,7 @@
         },
 
         renderHeader: function(){
+            slingo.debug('renderHeader')
             this.header.render();
         },
 
@@ -170,8 +179,9 @@
 
             if(!$this.header){
                 this.header = new slingo.Views.header({el : '#header', user: $this.user, tpl: this.tpl}); 
+
             }else{
-                $('#header').html($this.header.el);
+                $('#header').html(this.header.render());
             }
 
             this.getProjects();
@@ -301,14 +311,10 @@
             if(!this.bodyContainer){
                 this.isDfd = true;
                 this.dfd.promise( this.renderHome() ).done(function(){
-
                     $this.bodyContainer.html( _.template( $this.tpl.profileTpl )(user) );
-
                 });
             }else{
-
                 $this.bodyContainer.html( _.template( $this.tpl.profileTpl  )(user) );
-
             }
 
         },

@@ -111,7 +111,7 @@
         <div class="navbar-collapse collapse">
           <ul class="nav navbar-nav">
 
-            <li><a href="#" tabindex=2>Dashboard</a></li>
+            <li><a href="#" tabindex=2 id="dashboard">Dashboard</a></li>
             <% if(globalAdmin) { %>
                
               <li class="dropdown">
@@ -124,7 +124,7 @@
                 </ul>
               </li>
             <% } %>
-            <li><a href="#" tabindex=6>Help</a></li>
+            <li><a href="#" tabindex=6 id="help">Help</a></li>
             <% if(userID == '') { %>
             <li id="login" data-toggle="popover"><a href="#" tabindex=7>Login</a></li>
             

@@ -10,13 +10,14 @@
             this.render();
         },
         render: function(){
-            $this = this;
 
-            $this.$el.html(_.template( this.tpl.headerTpl )( $this.user.toJSON() ) );
-            $this.init();
+            this.$el.html(_.template( this.tpl.headerTpl )( this.user.toJSON() ) );
+            this.init();
+            this.delegateEvents();
+
+            return this.el;
         },
         init: function(){
-            var $this = this;
 
             this.$('#login').popover({
                 html : true,
@@ -28,13 +29,19 @@
             });
         },
         events: {
-            'click #login a' : 'stopLoginAction',
+            'click #login a' : 'stopAction',
             'click #logout' : 'logout',
             'click #profile' : 'profile',
+            'click #dashboard, click #logo, click #help' : 'home',
             'submit #login-form' : 'login'
         },
-        stopLoginAction: function(e){
+        stopAction: function(e){
             e.preventDefault();
+        },
+        home: function(e) {
+            e.preventDefault();
+
+            slingo.Router.navigate('/', {trigger: true});
         },
         login: function(e){
             e.preventDefault();
@@ -86,8 +93,6 @@
                 }),
                 success: function(data) {
                     $this.user.trigger('logout');
-                        
-                    
                 }
             });
         },
