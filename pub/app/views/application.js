@@ -77,6 +77,18 @@
             if(!this.bodyContainer){
                 this.isDfd = true;
                 this.dfd.promise( this.renderHome() ).done(function(data){
+
+                    /* new view */
+
+                    if(!$this.adminProject){
+                        $this.adminProject = new slingo.Views.adminProject();
+                    }else{
+                        $this.adminProject.render();
+                    }
+
+                    $this.bodyContainer.html( _.template( $this.tpl.adminProjectTpl )(attr) );
+
+
                     attr.projects = $this.projects.toJSONObject();
                     $this.bodyContainer.html( _.template( $this.tpl.adminProjectTpl )(attr) );
                 });
