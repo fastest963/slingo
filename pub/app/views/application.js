@@ -336,17 +336,18 @@
         renderProject: function(project){
             
             var $this = this;
+            var attr = {'proj': project};
 
             if(!this.bodyContainer){
                 this.isDfd = true;
                 this.dfd.promise( this.renderHome() ).done(function(){
 
-                    $this.bodyContainer.html( _.template( $this.tpl.adminProjectEditTpl )(profile) );
+                    $this.bodyContainer.html( _.template( $this.tpl.adminProjectEditTpl )(attr));
 
                 });
             }else{
 
-                $this.bodyContainer.html( _.template( $this.tpl.adminProjectEditTpl  )(profile) );
+                $this.bodyContainer.html( _.template( $this.tpl.adminProjectEditTpl  )(attr));
 
             }
 

@@ -13,7 +13,7 @@
             'click' : 'showProjectDetails'
         },
         showProjectDetails: function() {
-            slingo.Router.navigate(this.model.id)
+            slingo.Router.navigate('project/' +this.model.id,{trigger: true});
         }
     });
 })();
