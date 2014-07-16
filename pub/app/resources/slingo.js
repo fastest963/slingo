@@ -39,6 +39,7 @@
             this.adminProjectFormTpl = this.$('#adminProjectForm_tpl').html();
             this.adminProjectEditTpl = this.$('#adminProjectEdit_tpl').html();
             this.profileTpl = this.$('#profile_tpl').html();
+            this.projectTpl = this.$('#project_tpl').html();
         }
     })
 

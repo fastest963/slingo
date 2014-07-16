@@ -232,6 +232,7 @@
 </script>
 
 <script type="text/template" id="adminProject_tpl">
+<div>
     <div id="adminProjectForm">
         <h3> Change project options here </h3>
         <a class="btn btn-primary btn-lg col-md-2 col-sm-2" role="button" id="project-form" href="#adminProjectForm">Create</a>
@@ -247,22 +248,11 @@
                 </tr>
             </thead>
             <tbody>
-                <% _.each(projects, function(project){ %>
-
-                    <tr>
-
-                        <td> <a href = "#adminProjectEdit"><%=project.displayName%> </td>
-
-
-
-                    </tr>
-                
-                <% }); %>
-                
-
+              
             </tbody>
         </table>
     </div>
+</div>
 </script>
 
 <script type="text/template" id="profile_tpl">
@@ -372,4 +362,12 @@
       </div>
     </div>
     </div>
+</script>
+
+<script type="text/template" id="project_tpl">
+  <tr>
+    <td>
+      <%=displayName %>
+    </td>
+  </tr>
 </script>
