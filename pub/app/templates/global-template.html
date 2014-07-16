@@ -1,0 +1,372 @@
+<script type="text/template" id="application_tpl">
+    <nav id="header" class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+        
+    </nav>
+    <div id="body">
+        <div class="container welcome-board">
+            <div class="bg">
+            </div>
+            <div class="pull-left left-container">
+                <h1>The World's Music Player In Every Language</h1>
+                <p>Do you speak multiple languages? Help make Grooveshark even better. Help make a difference right away!</p>
+
+                <form>
+                    <p class="">Let's translate </p>
+
+                    <input type="text" id="project-input" data-provide="typeahead" tabindex=11 placeholder="Select a project" data-items="4" value=<%=proj%>>
+                    in 
+                    <input type="text" id="language-input" data-provide="typeahead" tabindex=12 placeholder="Select a language" data-items="4" data-source='["Alabama","Alaska","Arizona","Arkansas","California","Colorado","Connecticut","Delaware","Florida","Georgia","Hawaii","Idaho","Illinois","Indiana","Iowa","Kansas","Kentucky","Louisiana","Maine","Maryland","Massachusetts","Michigan","Minnesota","Mississippi","Missouri","Montana","Nebraska","Nevada","New Hampshire","New Jersey","New Mexico","New York","North Dakota","North Carolina","Ohio","Oklahoma","Oregon","Pennsylvania","Rhode Island","South Carolina","South Dakota","Tennessee","Texas","Utah","Vermont","Virginia","Washington","West Virginia","Wisconsin","Wyoming"]' value=<%=lang%>>                 
+                    <a class="btn btn-primary btn-lg" role="button" id="translate-submit" tabindex=13>Go</a>
+                </form>
+
+            </div>
+            <div class="pull-right right-container">
+                <ul>
+                    <li> Music </li>
+                    <li> Música </li>
+                    <li> музика </li>
+                    <li> 音乐 </li>
+                    <li> संगीत </li>
+                    <li> موسيقى </li>
+                </ul>
+            </div>
+        </div>
+        <div class="translation-stats">
+            <div class="content">
+                123123 languages and 123 words
+            </div>
+        </div>
+    </div>
+
+    <div id="footer" class="container">
+        <footer>
+            <div class="external-links pull-left">
+                <a href="http://grooveshark.com/#!/about/advertising" class="footer-link">Advertise</a>
+                <span class="slash">/</span>
+                <a href="http://store.grooveshark.com" class="footer-link" target="_blank">Merch </a>
+                <span class="slash">/</span>
+                <a href="http://grooveshark.com/#!/press" class="footer-link"> Press</a>
+                <span class="slash">/</span>
+                <a href="http://grooveshark.com/#!/careers" class="footer-link">Careers</a>
+                <span class="slash">/</span>
+                <a href="http://grooveshark.com/#!/legal/privacy" class="footer-link">Privacy</a>
+                <span class="slash">/</span>
+                <a href="http://grooveshark.com/#!/legal/dmca" class="footer-link">Copyrights</a> 
+                <span class="slash">/</span>
+                <a href="http://grooveshark.com/#!/legal/terms" class="footer-link">Terms</a>
+                <span class="slash">/</span>
+                <a href="http://help.grooveshark.com" class="footer-link" target="_blank" class="last-child">Help</a>
+            </div>
+
+            <div class="social-links pull-right">
+                <a href="http://www.supermaneddy.com" class="social-link" target="_blank">
+                    <i class="icon icon-star"></i>
+                    <span class="social-label" data-translate-text="IN_MEMORY">In memory</span>
+                </a>
+                <a href="http://www.facebook.com/grooveshark" class="social-link" target="_blank">
+                    <i class="icon icon-facebook"></i>
+                    <span class="social-label">Facebook</span>
+                </a>
+                <a class="last-child social-link" href="https://twitter.com/Grooveshark" target="_blank">
+                    <i class="icon icon-twitter"></i>
+                    <span class="social-label">Twitter</span>
+                </a>
+            </div>
+
+            <div class="copyright pull-left">
+                <span>&copy; 2014 Escape Media Group. </span><span> All Rights Reserved.</span>
+            </div>
+            <div class="love pull-right">
+                <span>Made with love in FL &amp; NY.</span>
+            </div>
+
+        </footer>
+    </div>
+    <!--
+    <div class="body">
+        <input type="button" id="login" value="Login"/>
+        <input type="button" id="logout" value="Logout"/>
+        <input type="button" id="createProject" value="create Project"/>
+        <input type="button" id="getProjects" value="get Projects"/>
+        <input type="button" id="createLanguage" value="create Language"/>
+    </div>
+    -->
+</script>
+
+<script type="text/template" id="header_tpl">
+<div class="container">
+    <div class="container-fluid">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#" id="logo" tabindex=1>
+            <i class="icon icon-logo"></i>
+            <i class="icon-animated"></i>
+          </a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+
+            <li><a href="#" tabindex=2 id="dashboard">Dashboard</a></li>
+            <% if(globalAdmin) { %>
+               
+              <li class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#" tabindex=3>
+                  Admin <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu" role="menu">
+                    <li role="presentation"><a role="menuitem" href="#adminUser" tabindex=4>User</a></li>
+                    <li role="presentation"><a role="menuitem" href="#adminProject" tabindex=5>Project</a></li>
+                </ul>
+              </li>
+            <% } %>
+            <li><a href="#" tabindex=6 id="help">Help</a></li>
+            <% if(userID == '') { %>
+            <li id="login" data-toggle="popover"><a href="#" tabindex=7>Login</a></li>
+            
+            <div class="popover" id="login-box">
+                <div class="arrow"></div>
+                <div class="popover-content">
+                    <div class="form-heading">
+                        Sign into Grooveshark
+                    </div>
+                    <div class="form-error-message">
+                    </div>
+                    <form role="form" id="login-form" action="">
+                        <div class="form-group">
+                            <label for="param-username">Username</label>
+                            <input type="text" class="form-control" id="param-username" placeholder="Enter username" autofocus>
+                        </div>
+                        <div class="form-group">
+                            <label for="param-password">Password</label>
+                            <input type="password" class="form-control" id="param-password" placeholder="Password">
+                        </div>
+                        <button type="submit" class="btn btn-default">Submit</button>
+                    </form>    
+                </div>
+            </div>
+            <% } %>
+            <% if (userID != '') {%>
+              <li class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#" tabindex=8>
+                User<span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu" role="menu">
+                    <li role="presentation"><a role="menuitem" href="#" id= "profile"tabindex=9>Profile</a></li>
+
+                    <li role="presentation"><a role="menuitem" href= "#" id= "logout" tabindex=10>logout</a></li>
+                </ul>
+              </li>
+              <% } %>
+          </ul>
+        </div>
+    </div>
+</div>
+</script>
+
+<script type="text/template" id="languageCollection_tpl">
+<div id="language-collection">
+    <form class="form-inline" role="form">
+      <div class="form-group">
+        <label class="sr-only" for="project-select">Project</label>
+        <label for="project-select">Project</label>
+        <select class="form-control" id="project-select">
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="sr-only" for="language-select">Language</label>
+        <label for="language-select">Language</label>
+        <select class="form-control" id="language-select">
+        </select>
+      </div>
+      <button type="submit" class="btn btn-default" id="get-translations">Translate</button>
+    </form>
+</div>
+</script>
+
+<script type="text/template" id="adminUser_tpl">
+<h3> Change user permissions here </h3>
+
+<form class="navbar-form navbar-left" role="search">
+    <div class="form-group">
+      <!-- <span class="glyphicon glyphicon-search"></span> -->
+      <input type="text" class="form-control" placeholder="Search username">
+    </div>
+    <button type="submit" class="btn btn-default">Submit</button>
+</form>
+<div class = "permission">
+    <table class = "table table-hover">
+        <thead> 
+            <tr>
+                <th>Username</th>
+                <th>Email Address</th>
+                <th>Permission</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Mark</td>
+                <td>mark@grooveshark.com</td>
+                <td>
+                    <label class="checkbox-inline">
+                      <input type="checkbox" id="active" value="option1"> active
+                    </label>
+                    <label class="checkbox-inline">
+                      <input type="checkbox" id="superuser" value="option2"> super user
+                    </label>
+                    <label class="checkbox-inline">
+                      <input type="checkbox" id="admin" value="option3"> admin
+                    </label>
+                    <label class="checkbox-inline">
+                      <input type="checkbox" id="ban" value="option3"> ban
+                    </label>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+</script>
+
+<script type="text/template" id="adminProject_tpl">
+<div id="adminProject">
+    <div>
+        <h3> Change project options here </h3>
+        <a class="btn btn-primary btn-lg col-md-2 col-sm-2" role="button" id="project-form" href="#adminProjectForm">Create</a>
+    </div>
+
+     <div class="permission">
+        <table class="table table-hover">
+            <thead> 
+                <tr>
+                    <th>Project Name</th>
+                    <th>Permissions</th>
+                    
+                </tr>
+            </thead>
+            <tbody>
+              
+            </tbody>
+        </table>
+    </div>
+</div>
+</script>
+
+<script type="text/template" id="profile_tpl">
+    <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+        <h1 class="page-header"><%=user%></h1>
+        <h3 class="page-header">PERMISSION</h3>
+        
+    </div>
+       <div class="container">
+      <!-- Example row of columns -->
+      <div class="row">
+        <div class="col-md-4">
+          <h2>Projects</h2>
+
+
+        </div>
+        <div class="col-md-4">
+          <h2>Languages</h2>
+
+       </div>
+
+    <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+
+          <h2 class="sub-header">Languages</h2>
+          <div class="table-responsive">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th></th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Number of Submissions</td>
+                  <td>5</td>
+
+                </tr>
+                <tr>
+                  <td>Number of Reviews</td>
+                  <td>0</td>
+
+                </tr>
+
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+</script>
+
+<script type="text/template" id="adminProjectForm_tpl">
+
+<h1> Create Project </h1>
+
+ <form role="form" id="project-form" action="">
+    <label for="project_name">Project Name</label>
+    <input type="text" class="form-control" id="param-projectname" placeholder="Enter name">
+
+  <button type="submit" class="btn btn-default">Submit</button>
+</form>
+</script>
+
+<script type="text/template" id="adminProjectEdit_tpl">
+  <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+        <h1 class="page-header"> <%=proj%> </h1>
+        <div class="progress">
+          <div class="progress-bar" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 60%;">
+            60%
+          </div>
+        </div>
+        <div class = "buttons">
+          <a class="btn btn-primary btn-lg col-md-2 col-sm-2" role="button" id="project-form" href="#">Edit</a>
+          <a class="btn btn-primary btn-lg col-md-2 col-sm-2" role="button" id="project-form" href="#">Delete</a>
+        </div>
+
+  </div>
+    <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+
+          <h2 class="sub-header">Languages</h2>
+          <div class="table-responsive">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Header</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>English</td>
+                  <td>Lorem</td>
+
+                </tr>
+              </tbody>
+            </table>
+            <form role="form" id="language-form" action="">
+            <input type="text" class="form-control" id="param-languagename" placeholder="Enter language">
+            <button type="submit" class="btn btn-default">Save</button>
+            </form>
+
+
+          </div>
+        </div>
+
+</script>
+
+<script type="text/template" id="project_tpl">
+    <td>
+      <%=displayName %>
+    </td>
+    <td>
+      Some permissions 
+    </td>
+</script>
+
