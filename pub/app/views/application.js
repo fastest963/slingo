@@ -80,22 +80,18 @@
                     /* new view */
 
                     if(!$this.adminProject){
+                        slingo.debug('calling new project view again')
                         $this.adminProject = new slingo.Views.adminProject({ el: $this.bodyContainer, tpl: $this.tpl, projects : $this.projects});
                     }else{
+                        slingo.debug('here')
                         $this.adminProject.render();
                     }
 
-                    //$this.bodyContainer.html( _.template( $this.tpl.adminProjectTpl )(attrs) );
-
-
-                    //attrs.projects = $this.projects.toJSONObject();
-                    //$this.bodyContainer.html( _.template( $this.tpl.adminProjectTpl )(attrs) );
                 });
             }else{
                 this.isDfd = true;
                 this.dfd.promise( this.getProjects() ).done(function() {
-                    attrs.projects = $this.projects.toJSONObject();
-                    $this.bodyContainer.html( _.template( $this.tpl.adminProjectTpl )() );                    
+                    $this.adminProject.render();
                 })
             }
             
@@ -139,7 +135,7 @@
             if(!this.bodyContainer){
                 this.isDfd = true;
                 this.dfd.promise( this.renderHome() ).done(function(){
-                    $this.bodyContainer.html( _.template( this.tpl.adminProjectFormTpl )() );
+                    $this.bodyContainer.html( _.template( $this.tpl.adminProjectFormTpl )() );
                 });
             }else{
                 $this.bodyContainer.html( _.template( this.tpl.adminProjectFormTpl )() );

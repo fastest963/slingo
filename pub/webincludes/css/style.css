@@ -250,6 +250,18 @@ body{
     border-radius: 0px;
     line-height: 0.6;
 }
+
+#adminProject{
+    margin: 20px 70px;
+}
+#adminProject table tr {
+    margin: 50px 0px;
+}
+#adminProject table tr:hover{
+    font-weight: 700;
+    cursor: hand;
+    cursor: pointer;
+}
 #footer {
     width: 100%;
     height: 80px;
