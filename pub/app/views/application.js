@@ -285,6 +285,7 @@
 
         },
 
+
         renderProfile: function(user){
             
             var $this = this;

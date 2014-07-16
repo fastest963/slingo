@@ -59,14 +59,20 @@
                 this.application.load('renderLanguageCollection', [proj, lang]);
             }else{
                 this.application.renderLanguageCollection(proj, lang);
+
             }
         },
+        
         profile: function(user){
 
             if(!this.application){
                 this.application = new slingo.Views.application();
-            }
+                this.application.load('renderProfile' , user);
+            }else{
             this.application.renderProfile(user);
+
+            }
+
         }
     });
 

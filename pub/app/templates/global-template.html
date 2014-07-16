@@ -157,6 +157,7 @@
                 </a>
                 <ul class="dropdown-menu" role="menu">
                     <li role="presentation"><a role="menuitem" href="#" id= "profile"tabindex=9>Profile</a></li>
+
                     <li role="presentation"><a role="menuitem" href= "#" id= "logout" tabindex=10>logout</a></li>
                 </ul>
               </li>
@@ -249,7 +250,11 @@
                 <% _.each(projects, function(project){ %>
 
                     <tr>
+
                         <td> <a href = "#adminProjectEdit"><%=project.displayName%> </td>
+
+
+
                     </tr>
                 
                 <% }); %>
