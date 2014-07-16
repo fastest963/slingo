@@ -22,7 +22,7 @@
         },
         events: {
             'click #getProjects' : 'getProjects',
-            'click #createLanguage' : 'createLanguage',
+            'submit #language-form' : 'createLanguage',
             'click #translate-submit' : 'translate',
             'submit #project-form' : 'createProject',
 
@@ -247,10 +247,12 @@
         },
         
         createLanguage: function(e) {
+            slingo.debug("enter");
             e.preventDefault();
 
             var $this = this;
             var name = this.$('#param-languagename').val();
+            var projectID = this.project.projectID;
             var error_message = this.$('.form-error-message');
             var submit_button = this.$('button');
             submit_button.attr('disabled', 'disabled');
@@ -273,11 +275,9 @@
                 data = JSON.parse(data);
                 if(data.success === true){
                     alert (name + " has been created ");
-                    slingo.Router.navigate('adminProjectEdit', {trigger: true});
-
 
                 }else{
-                    error_message.html('No project was created');
+                    error_message.html('No language was created');
                 }
                 submit_button.removeAttr('disabled');
                 }
@@ -314,17 +314,18 @@
         renderProfile: function(user){
             
             var $this = this;
+            var attr = {'user': user};
 
             if(!this.bodyContainer){
                 this.isDfd = true;
                 this.dfd.promise( this.renderHome() ).done(function(){
 
-                    $this.bodyContainer.html( _.template( $this.tpl.profileTpl )(user) );
+                    $this.bodyContainer.html( _.template( $this.tpl.profileTpl )(attr) );
 
                 });
             }else{
 
-                $this.bodyContainer.html( _.template( $this.tpl.profileTpl  )(user) );
+                $this.bodyContainer.html( _.template( $this.tpl.profileTpl  )(attr) );
 
             }
 

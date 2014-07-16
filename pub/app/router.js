@@ -77,7 +77,7 @@
 
         },
         projectDetails: function(project){
-            slingo.debug("LOL");
+  
 
             if(!this.application){
                 this.application = new slingo.Views.application();
