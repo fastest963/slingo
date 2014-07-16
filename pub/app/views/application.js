@@ -296,6 +296,27 @@
             });
 
         },
+
+
+        renderProfile: function(user){
+            
+            var $this = this;
+
+            if(!this.bodyContainer){
+                this.isDfd = true;
+                this.dfd.promise( this.renderHome() ).done(function(){
+
+                    $this.bodyContainer.html( _.template( $this.tpl.profileTpl )(user) );
+
+                });
+            }else{
+
+                $this.bodyContainer.html( _.template( $this.tpl.profileTpl  )(user) );
+
+            }
+
+        },
+
         checkLogin: function() {
 
             var $this = this;

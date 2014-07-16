@@ -156,7 +156,8 @@
                 User<span class="caret"></span>
                 </a>
                 <ul class="dropdown-menu" role="menu">
-                    <li role="presentation"><a role="menuitem" href="#" tabindex=9>Profile</a></li>
+                    <li role="presentation"><a role="menuitem" href="#" id= "profile"tabindex=9>Profile</a></li>
+
                     <li role="presentation"><a role="menuitem" href= "#" id= "logout" tabindex=10>logout</a></li>
                 </ul>
               </li>
@@ -250,7 +251,11 @@
                 <% _.each(projects, function(project){ %>
 
                     <tr>
-                        <td> <%=project.displayName%> </td>
+
+                        <td> <a href = "#adminProjectEdit"><%=project.displayName%> </td>
+
+
+
                     </tr>
                 
                 <% }); %>
@@ -260,6 +265,56 @@
         </table>
     </div>
 </div>
+</script>
+
+<script type="text/template" id="profile_tpl">
+    <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+        <h1 class="page-header">USER</h1>
+        <h3 class="page-header">PERMISSION</h3>
+        
+    </div>
+       <div class="container">
+      <!-- Example row of columns -->
+      <div class="row">
+        <div class="col-md-4">
+          <h2>Projects</h2>
+
+
+        </div>
+        <div class="col-md-4">
+          <h2>Languages</h2>
+
+       </div>
+
+    <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+
+          <h2 class="sub-header">Languages</h2>
+          <div class="table-responsive">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th></th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Number of Submissions</td>
+                  <td>5</td>
+
+                </tr>
+                <tr>
+                  <td>Number of Reviews</td>
+                  <td>0</td>
+
+                </tr>
+
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
 </script>
 
 <script type="text/template" id="adminProjectForm_tpl">

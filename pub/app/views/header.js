@@ -30,6 +30,7 @@
         events: {
             'click #login a' : 'stopLoginAction',
             'click #logout' : 'logout',
+            'click #profile' : 'profile',
             'submit #login-form' : 'login'
         },
         stopLoginAction: function(e){
@@ -90,5 +91,14 @@
                 }
             });
         },
+
+        profile: function(e){
+            e.preventDefault();
+
+            var $this = this;
+            var user = this.user.get("username");
+            slingo.Router.navigate('user/' + user, {trigger: true});
+        
+        }
     });
 })();
