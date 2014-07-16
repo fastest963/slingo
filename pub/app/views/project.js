@@ -4,6 +4,7 @@
     slingo.Views.project = Backbone.View.extend({
         tagName : 'tr',
         initialize: function() {
+            this.nextEl = this.options.nextEl;
             this.template = this.options.template;
             this.render();
         },

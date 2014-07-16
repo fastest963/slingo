@@ -5,8 +5,11 @@
         initialize: function(){
             this.render();
         },
-        render: function(){
+        render: function(el){
 
+            if(el){
+                this.$el = el;
+            }
             this.tpl = this.options.tpl;
             this.attrs = this.options.attrs;
             this.projects = this.options.projects;
@@ -16,7 +19,8 @@
             this.projects_table = this.$('table tbody');
 
             this.getProjects();
-            return this.el;
+
+            return this.$el;
         },
         events: {
             
