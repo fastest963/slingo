@@ -72,19 +72,30 @@
         renderAdminProject: function(){ 
 
             var $this = this;
-            var attr = { 'projects' :  '' };
             
             if(!this.bodyContainer){
                 this.isDfd = true;
                 this.dfd.promise( this.renderHome() ).done(function(data){
-                    attr.projects = $this.projects.toJSONObject();
-                    $this.bodyContainer.html( _.template( $this.tpl.adminProjectTpl )(attr) );
+
+                    /* new view */
+
+                    if(!$this.adminProject){
+                        $this.adminProject = new slingo.Views.adminProject({ el: $this.bodyContainer, tpl: $this.tpl, projects : $this.projects});
+                    }else{
+                        $this.adminProject.render();
+                    }
+
+                    //$this.bodyContainer.html( _.template( $this.tpl.adminProjectTpl )(attrs) );
+
+
+                    //attrs.projects = $this.projects.toJSONObject();
+                    //$this.bodyContainer.html( _.template( $this.tpl.adminProjectTpl )(attrs) );
                 });
             }else{
                 this.isDfd = true;
                 this.dfd.promise( this.getProjects() ).done(function() {
-                    attr.projects = $this.projects.toJSONObject();
-                    $this.bodyContainer.html( _.template( $this.tpl.adminProjectTpl )(attr) );                    
+                    attrs.projects = $this.projects.toJSONObject();
+                    $this.bodyContainer.html( _.template( $this.tpl.adminProjectTpl )() );                    
                 })
             }
             
@@ -176,7 +187,7 @@
 
             if(!this.projects || this.projects.length == 0){
 
-                this.projects.fetch({data: JSON.stringify({method: 'listAllProjects', 'header' : '12'}), type: 'POST'}).done(function  (data, success, xhr) {
+                this.projects.fetch({data: JSON.stringify({method: 'listAllProjects', 'header' : {}}), type: 'POST'}).done(function  (data, success, xhr) {
                     
                     var projs = $.map($this.projects.toJSON(), function(v){return v.displayName;});
                     project_input.data('source', projs);
