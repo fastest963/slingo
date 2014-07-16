@@ -238,7 +238,7 @@
         <a class="btn btn-primary btn-lg col-md-2 col-sm-2" role="button" id="project-form" href="#adminProjectForm">Create</a>
     </div>
 
-    <div class="permission">
+     <div class="permission">
         <table class="table table-hover">
             <thead> 
                 <tr>
@@ -257,7 +257,7 @@
 
 <script type="text/template" id="profile_tpl">
     <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
-        <h1 class="page-header">USER</h1>
+        <h1 class="page-header"><%=user%></h1>
         <h3 class="page-header">PERMISSION</h3>
         
     </div>
@@ -319,7 +319,7 @@
 
 <script type="text/template" id="adminProjectEdit_tpl">
   <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
-        <h1 class="page-header">Andriod</h1>
+        <h1 class="page-header"> <%=proj%> </h1>
         <div class="progress">
           <div class="progress-bar" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 60%;">
             60%
@@ -348,20 +348,17 @@
                   <td>Lorem</td>
 
                 </tr>
-                <tr>
-                  <td><a class="btn btn-primary btn-lg col-md-2 col-sm-2" role="button" id="project-form" href="#adminProjectForm">Create</a></td>
-                  <td>amet</td>
-
-                </tr>
-
-                </tr>
               </tbody>
             </table>
+            <form role="form" id="language-form" action="">
+            <input type="text" class="form-control" id="param-languagename" placeholder="Enter language">
+            <button type="submit" class="btn btn-default">Save</button>
+            </form>
+
+
           </div>
         </div>
-      </div>
-    </div>
-    </div>
+
 </script>
 
 <script type="text/template" id="project_tpl">
@@ -372,3 +369,4 @@
       Some permissions 
     </td>
 </script>
+

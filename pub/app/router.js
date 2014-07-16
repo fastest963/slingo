@@ -8,7 +8,9 @@
             'adminProjectEdit' : 'adminProjectEdit',
             'adminProjectForm' : 'adminProjectForm',
             'translate/:proj/:lang' : 'languageTranslation',
-            'user/:user' : 'profile'
+            'user/:user' : 'profile',
+            'project/:project' : 'projectDetails'
+
         },
         home: function(){
             if(!this.application){
@@ -71,6 +73,18 @@
                 this.application.load('renderProfile' , user);
             }else{
                 this.application.renderProfile(user);
+            }
+
+        },
+        projectDetails: function(project){
+  
+
+            if(!this.application){
+                this.application = new slingo.Views.application();
+                this.application.load('renderProject', project);
+            }else{
+            this.application.renderProject(project);
+
             }
 
         }
