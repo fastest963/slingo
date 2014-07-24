@@ -512,6 +512,22 @@ class TranslationDB
     {
 
     }
+
+    //will also return user if their userID is an exact match for $query
+    public function getAutocompleteForUsername($query, $limit = 10)
+    {
+        $return = array('users' => null,
+                        'errorCode' => self::ERROR_UNKNOWN,
+                        );
+        if (empty($query)) {
+            $return['errorCode'] = self::ERROR_INVALID_PARAMS;
+            return $return;
+        }
+
+        $result['users'] = $this->connection->getAutocompleteForUsername($query, $limit);
+        $result['errorCode'] = 0;
+        return $result;
+    }
 }
 
 if (isset(TranslationConfig::$config['db'])) {

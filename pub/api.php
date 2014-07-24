@@ -141,6 +141,13 @@ class TranslationAPIDefinitions
         return array('params' => $params);
     }
 
+    public static function getAutocompleteForUsername()
+    {
+        $params = array('query' => self::REQUIRED,
+                        );
+        return array('params' => $params);
+    }
+
 /*
     public static function addSuggestion()
     {

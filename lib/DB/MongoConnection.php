@@ -895,6 +895,35 @@ class DB_MongoConnection implements DB_Template
         return $result;
     }
 
+    public function getAutocompleteForUsername($search, $limit = null)
+    {
+        $search = addcslashes($search, "/.+?*[]()$^");
+        $regex = new MongoRegex("/^$search/i");
+        if (is_numeric($search)) {
+            //if they sent an all numeric search then they're probably looking for an int userID, optimize for that since mongo is type sensitive
+            $search = (int)$search;
+        }
+        $or = array(array(self::KEY_USERNAME => array('$regex' => $regex)),
+                    array(self::KEY_USER_ID => $search),
+                    );
+        $query = array('$or' => $or);
+        $coll = $this->getCollection(self::COLL_USERS);
+        $coll->setSlaveOkay(true);
+        $fields = array(self::KEY_USER_ID => 1,
+                        self::KEY_USERNAME => 1,
+                        self::KEY_GLOBAL_ADMIN => 1,
+                        );
+        $cursor = $coll->find($query, $fields)->sort(array(self::KEY_USERNAME => 1));
+        if (!empty($limit)) {
+            //$cursor->limit($limit);
+        }
+        $users = array();
+        foreach ($cursor as $user) {
+            $users[] = self::mapUser($user);
+        }
+        return $users;
+    }
+
 }
 
 //EOF

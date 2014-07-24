@@ -131,6 +131,13 @@ interface DB_Template
 
     public function getUntranslatedStrings($project, $lang, $orderedByPriority = true, $limit = 0);
 
+    /**
+     * Should also check to see if $search is exact match on userID
+     *
+     * @return array users
+     */
+    public function getAutocompleteForUsername($search, $limit = null);
+
 }
 
 //EOF

@@ -175,5 +175,14 @@ class TranslationAPI
         return $return;
     }
 
+    /*** Admin-related methods ***/
+
+    public static function getAutocompleteForUsername($query)
+    {
+        $db = TranslationDB::getInstance();
+        $return = $db->getAutocompleteForUsername($query);
+        return $return;
+    }
+
 }
 ?>
