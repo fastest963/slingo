@@ -294,7 +294,9 @@ class DB_MongoConnection implements DB_Template
     public function getUser($userID)
     {
         $coll = $this->getCollection(self::COLL_USERS);
-        $doc = $coll->findOne(array(self::KEY_USER_ID => $userID));
+        $query = array(self::KEY_USER_ID => $userID);
+        $fields = array(self::KEY_USER_PASSWORD => 0);
+        $doc = $coll->findOne($query, $fields);
         if (is_null($doc)) {
             return null;
         }
