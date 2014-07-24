@@ -86,17 +86,35 @@ interface DB_Template
     public function storeNewLanguage($projectID, $displayName, $id = null, $everyonePermission = 0, $strings = null);
 
     /**
+     * This does NOT check permissions so you must not allow this to be called directly from the API
+     * Returns false if there were no languages found
+     *
+     * @return bool success
+     */
+    public function deleteAllLanguagesForProject($projectID);
+
+    /**
+     * This does NOT check permissions so you must not allow this to be called directly from the API
+     * Returns false if there were no languages found
+     *
+     * If projectID is not sent, then this language will be deleted from all projects
+     *
+     * @return bool success
+     */
+    public function deleteLanguage($id, $projectID = null);
+
+    /**
      * if $ids is null, then return all languages in that project
      * @return array mapped languages keyed by languageID
      */
-    public function getLanguages($projectID, $ids = null, $includeStrings = true, $includeSuggestions = true);
+    public function getLanguages($projectID, $ids = null, $includeStrings = false, $includeSuggestions = false);
 
     /**
      * If not found, don't include key in array.
      * If $projectIDs is null, then return language from all projects
      * @return array mapped languages keyed by projectID
      */
-    public function getLanguageFromProjects($id, $projectIDs = null, $includeStrings = true, $includeSuggestions = true);
+    public function getLanguageFromProjects($id, $projectIDs = null, $includeStrings = false, $includeSuggestions = false);
 
     /**
      * If not found, return null

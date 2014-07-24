@@ -88,19 +88,31 @@ class TranslationAPI
 
     public static function createProject($name, $everyonePermission = null)
     {
-        $return = array('success' => false);
         //todo: max length on name?
         $db = TranslationDB::getInstance();
         $return = $db->storeNewProject($name, $everyonePermission);
         return $return;
     }
 
-    public static function createLanguage($name, $projectID, $everyonePermission = null)
+    public static function deleteProject($projectID)
     {
-        $return = array('success' => false);
         //todo: max length on name?
         $db = TranslationDB::getInstance();
+        $return = $db->deleteProject($projectID);
+        return $return;
+    }
+
+    public static function createLanguage($name, $projectID, $everyonePermission = null)
+    {
+        $db = TranslationDB::getInstance();
         $return = $db->storeNewLanguage($name, $projectID, null, $everyonePermission);
+        return $return;
+    }
+
+    public static function deleteLanguage($languageID, $projectID)
+    {
+        $db = TranslationDB::getInstance();
+        $return = $db->deleteLanguage($languageID, $projectID);
         return $return;
     }
 

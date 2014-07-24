@@ -614,7 +614,7 @@ class DB_MongoConnection implements DB_Template
      * @return array ('success' => bool, 'exists' => bool)
      * @throws MongoException
      */
-    public function storeNewLanguage($project, $displayName, $id = null, $everyonePermission = 0, $strings = null)
+    public function storeNewLanguage($projectID, $displayName, $id = null, $everyonePermission = 0, $strings = null)
     {
         if (empty($id)) {
             $idObj = new MongoId();
@@ -622,7 +622,7 @@ class DB_MongoConnection implements DB_Template
         }
         $doc = array(self::KEY_ID => $id,
                      self::KEY_NAME => $displayName,
-                     self::KEY_PROJECT => $project,
+                     self::KEY_PROJECT => $projectID,
                      self::KEY_SUGGESTIONS => new stdClass(),
                      );
 
@@ -662,23 +662,35 @@ class DB_MongoConnection implements DB_Template
         return $result;
     }
 
-    /**
-     * @return array ('permissions' => array)
-     */
-    public function getLanguagePermissions($id, $project)
+    public function deleteAllLanguagesForProject($projectID)
     {
-        $query = array(self::KEY_ID => $id,
-                       self::KEY_PROJECT => $project,
-                       );
         $coll = $this->getCollection(self::COLL_TRANSLATIONS);
-        $doc = $coll->findOne($query, array(self::KEY_PERMISSIONS));
-        return self::mapLanguage($doc);
+        $query = array(self::KEY_PROJECT => $projectID);
+        $result = $coll->remove($query, array('w' => true, 'justOne' => false));
+        if (empty($result['n'])) {
+            return false;
+        }
+        return true;
+    }
+
+    public function deleteLanguage($id, $projectID = null)
+    {
+        $coll = $this->getCollection(self::COLL_TRANSLATIONS);
+        $query = array(self::KEY_ID => $id);
+        if (!empty($projectID)) {
+            $query[self::KEY_PROJECT] = $projectID;
+        }
+        $result = $coll->remove($query, array('w' => true, 'justOne' => false));
+        if (empty($result['n'])) {
+            return false;
+        }
+        return true;
     }
 
     /**
      * @return array languages keyed by languageID
      */
-    public function getLanguages($projectID, $ids = null, $includeStrings = true, $includeSuggestions = true)
+    public function getLanguages($projectID, $ids = null, $includeStrings = false, $includeSuggestions = false)
     {
         $query = array(self::KEY_PROJECT => $projectID,
                        );

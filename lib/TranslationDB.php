@@ -299,8 +299,32 @@ class TranslationDB
         return $return;
     }
 
+    public function deleteProject($projectID)
+    {
+        $return = array('success' => false,
+                        'errorCode' => self::ERROR_UNKNOWN,
+                        );
+
+        if (empty($projectID)) {
+            $return['errorCode'] = self::ERROR_INVALID_PARAMS;
+            return $return;
+        }
+        if (!TranslationAuth::getInstance()->getIsGlobalAdmin()) {
+            $return['errorCode'] = self::ERROR_INVALID_PERMISSIONS;
+            return $return;
+        }
+
+        $result = $this->connection->deleteAllLanguagesForProject($projectID);
+        if (!$result) {
+            $return['errorCode'] = self::ERROR_NOT_FOUND;
+        } else {
+            $return['errorCode'] = 0;
+            $return['success'] = true;
+        }
+        return $return;
+    }
+
     //todo: rename project
-    //todo: delete project
 
     public function storeNewLanguage($displayName, $projectID, $id = null, $everyonePermission = 0, $strings = null, $copyPermissionsFrom = null)
     {
@@ -329,7 +353,7 @@ class TranslationDB
                 $return['errorCode'] = self::ERROR_INVALID_PARAMS;
                 return $return;
             }
-            $lang = $this->connection->getLanguagePermissions($copyPermissionsFrom['id'], $copyPermissionsFrom['project']);
+            $lang = $this->connection->getLanguage($copyPermissionsFrom['id'], $copyPermissionsFrom['project'], false, false);
             if (empty($lang) || !isset($lang['permissions'])) {
                 $return['errorCode'] = self::ERROR_NOT_FOUND;
                 return $return;
@@ -352,7 +376,31 @@ class TranslationDB
     }
 
     //todo: rename language
-    //todo: delete language
+
+    public function deleteLanguage($id, $projectID = null)
+    {
+        $return = array('success' => false,
+                        'errorCode' => self::ERROR_UNKNOWN,
+                        );
+
+        if (empty($id)) {
+            $return['errorCode'] = self::ERROR_INVALID_PARAMS;
+            return $return;
+        }
+        if (!TranslationAuth::getInstance()->getIsGlobalAdmin()) {
+            $return['errorCode'] = self::ERROR_INVALID_PERMISSIONS;
+            return $return;
+        }
+
+        $result = $this->connection->deleteLanguage($id, $projectID);
+        if (!$result) {
+            $return['errorCode'] = self::ERROR_NOT_FOUND;
+        } else {
+            $return['errorCode'] = 0;
+            $return['success'] = true;
+        }
+        return $return;
+    }
 
     public function getProjects($projectIDs = null, $includeStrings = false, $includeSuggestions = false)
     {

@@ -96,6 +96,13 @@ class TranslationAPIDefinitions
         return array('params' => $params);
     }
 
+    public static function deleteProject()
+    {
+        $params = array('projectID' => self::REQUIRED,
+                        );
+        return array('params' => $params);
+    }
+
     public static function createLanguage()
     {
         $params = array('name' => self::REQUIRED,
@@ -103,6 +110,14 @@ class TranslationAPIDefinitions
                         'everyonePermission' => self::OPTIONAL,
                         //'copyPermsFromLangID' => self::OPTIONAL,
                         //'copyPermsFromLangProjectID' => self::OPTIONAL,
+                        );
+        return array('params' => $params);
+    }
+
+    public static function deleteLanguage()
+    {
+        $params = array('languageID' => self::REQUIRED,
+                        'projectID' => self::REQUIRED,
                         );
         return array('params' => $params);
     }
@@ -216,7 +231,7 @@ if (!empty($definition['params'])) {
     $args = array();
     foreach ($definition['params'] as $paramName => $flags) {
         if (($flags & TranslationAPIDefinitions::REQUIRED) == TranslationAPIDefinitions::REQUIRED) {
-            if (!isset($postData['params'][$paramName])) {
+            if (!array_key_exists($paramName, $postData['params'])) {
                 returnJSON(array('result' => null, 'error' => 'missing_param', 'param' => $paramName));
                 exit;
             }
