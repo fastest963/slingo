@@ -323,6 +323,7 @@ class TranslationDB
         } else {
             $return['errorCode'] = 0;
             $return['success'] = true;
+            $return['projectID'] = $projectID;
         }
         return $return;
     }
@@ -405,6 +406,7 @@ class TranslationDB
         } else {
             $return['errorCode'] = 0;
             $return['success'] = true;
+            $return['languageID'] = $id;
         }
         return $return;
     }
