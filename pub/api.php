@@ -37,6 +37,13 @@ class TranslationAPIDefinitions
         return array('params' => $params);
     }
 
+    public static function getPermissionsForUserID()
+    {
+        $params = array('userID' => self::OPTIONAL,
+                        );
+        return array('params' => $params);
+    }
+
     public static function modifyMySettings()
     {
         $params = array('disablePoints' => self::OPTIONAL,
@@ -57,9 +64,9 @@ class TranslationAPIDefinitions
     public static function modifyUserLanguagePermissions()
     {
         $params = array('userID' => self::REQUIRED,
-                        'projectID' => self::REQUIRED,
-                        'language' => self::REQUIRED,
+                        'languageID' => self::REQUIRED,
                         'permissions' => self::REQUIRED,
+                        'projectID' => self::OPTIONAL,
                         );
         return array('params' => $params);
     }
@@ -108,8 +115,8 @@ class TranslationAPIDefinitions
         $params = array('name' => self::REQUIRED,
                         'projectID' => self::REQUIRED,
                         'everyonePermission' => self::OPTIONAL,
-                        //'copyPermsFromLangID' => self::OPTIONAL,
-                        //'copyPermsFromLangProjectID' => self::OPTIONAL,
+                        'copyPermsFromLangID' => self::OPTIONAL,
+                        'copyPermsFromLangProjectID' => self::OPTIONAL,
                         );
         return array('params' => $params);
     }
@@ -118,6 +125,21 @@ class TranslationAPIDefinitions
     {
         $params = array('languageID' => self::REQUIRED,
                         'projectID' => self::REQUIRED,
+                        );
+        return array('params' => $params);
+    }
+
+    public static function getLanguage()
+    {
+        $params = array('languageID' => self::REQUIRED,
+                        'projectID' => self::REQUIRED,
+                        );
+        return array('params' => $params);
+    }
+
+    public static function getLanguagesInProject()
+    {
+        $params = array('projectID' => self::REQUIRED,
                         );
         return array('params' => $params);
     }
@@ -142,6 +164,13 @@ class TranslationAPIDefinitions
     }
 
     public static function getAutocompleteForUsername()
+    {
+        $params = array('query' => self::REQUIRED,
+                        );
+        return array('params' => $params);
+    }
+
+    public static function getAutocompleteForLanguage()
     {
         $params = array('query' => self::REQUIRED,
                         );

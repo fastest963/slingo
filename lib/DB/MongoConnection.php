@@ -15,8 +15,6 @@ class DB_MongoConnection implements DB_Template
     const KEY_STRINGS = "s"; //keyed by stringID
     const KEY_PERMISSIONS = "m"; //object keyed by userID for translations and int for users
     const KEY_SUGGESTIONS = "sg"; //keyed by stringID and value of array
-    const KEY_NUM_STRINGS = "ns";
-    const KEY_NUM_PENDING_STRINGS = "ps";
     const KEY_TSMODIFIED = "ts";
     const KEY_STRING_USERID = "u"; //last userID to modify the string
     const KEY_STRING_VARIABLES = "v";
@@ -37,8 +35,6 @@ class DB_MongoConnection implements DB_Template
                                     self::KEY_PROJECT => 'projectID',
                                     self::KEY_NAME => 'displayName',
                                     self::KEY_PERMISSIONS => 'permissions',
-                                    self::KEY_NUM_STRINGS => 'numStrings',
-                                    self::KEY_NUM_PENDING_STRINGS => 'numPendingStrings',
                                     );
 
     private static $userMap = array(self::KEY_USER_ID => 'userID',
@@ -394,23 +390,27 @@ class DB_MongoConnection implements DB_Template
         return true;
     }
 
-    public function modifyUserLanguagePermissions($userID, $projectID, $languageID, $permissions, $deleteOtherLangPermissions = false)
+    public function modifyUserLanguagePermissions($userID, $languageID, $permissions, $projectID = null, $deleteOtherLangPermissions = false)
     {
+        $multiple = true;
         $query = array(self::KEY_LANG_ID => $languageID,
-                       self::KEY_PROJECT => $projectID,
                        );
+        if (!empty($projectID)) {
+            $query[self::KEY_PROJECT] = $projectID;
+            $multiple = false;
+        }
         if ($permissions === false) {
             $update['$unset'][self::KEY_PERMISSIONS][$userID] = 1;
         } else {
             $update['$set'][self::KEY_PERMISSIONS][$userID] = (int)$permissions;
         }
         $coll = $this->getCollection(self::COLL_TRANSLATIONS);
-        $updateResult = $coll->update($query, $update, array('upsert' => false, 'multiple' => false, 'w' => true));
+        $updateResult = $coll->update($query, $update, array('upsert' => false, 'multiple' => $multiple, 'w' => true));
         if (empty($updateResult['n'])) {
             return false;
         }
         if ($deleteOtherLangPermissions) {
-
+            //todo: do this
         }
         return true;
     }
@@ -654,12 +654,8 @@ class DB_MongoConnection implements DB_Template
      * @return array ('success' => bool, 'exists' => bool)
      * @throws MongoException
      */
-    public function storeNewLanguage($projectID, $displayName, $id = null, $everyonePermission = 0, $strings = null)
+    public function storeNewLanguage($projectID, $displayName, $id, $everyonePermission = 0, $strings = null)
     {
-        if (empty($id)) {
-            $idObj = new MongoId();
-            $id = $idObj->__toString();
-        }
         $doc = array(self::KEY_LANG_ID => $id,
                      self::KEY_NAME => $displayName,
                      self::KEY_PROJECT => $projectID,
@@ -736,6 +732,8 @@ class DB_MongoConnection implements DB_Template
                        );
         if (!empty($ids)) {
             $query[self::KEY_LANG_ID] = array('$in' => $ids);
+        } else {
+            $query[self::KEY_LANG_ID] = array('$ne' => TranslationDB::TEMPLATE_LANG);
         }
         $fields = null;
         if (!$includeSuggestions || !$includeStrings) {
@@ -858,17 +856,17 @@ class DB_MongoConnection implements DB_Template
     public function getUntranslatedStrings($project, $lang, $orderedByPriority = true, $limit = 0)
     {
         $result = array('strings' => null,
-                        );
+        );
         $query = array(self::KEY_LANG_ID => $lang,
                        self::KEY_PROJECT => $project,
-                       );
+        );
         $coll = $this->getCollection(self::COLL_TRANSLATIONS);
         $coll->setSlaveOkay(true);
         //todo: test the performance of this
         $pipeline = array(array('$match' => $query),
                           array('$project' => array('$' . self::KEY_STRINGS => 1)), //limit fields to ONLY strings so we don't unwind a ton of fields
                           array('$unwind' => '$' . self::KEY_STRINGS),
-                          array('$match' => array(self::KEY_STRINGS . "." . self::KEY_IS_TRANSLATED => array(':ne' => true))),
+                          array('$match' => array(self::KEY_STRINGS . "." . self::KEY_IS_TRANSLATED => array('$ne' => true))),
                           );
         if ($orderedByPriority) {
             $pipeline[] = array('$sort' => array(self::KEY_STRINGS . "." . self::KEY_PRIORITY => -1));
@@ -917,13 +915,45 @@ class DB_MongoConnection implements DB_Template
                         );
         $cursor = $coll->find($query, $fields)->sort(array(self::KEY_USERNAME => 1));
         if (!empty($limit)) {
-            //$cursor->limit($limit);
+            $cursor->limit($limit);
         }
         $users = array();
         foreach ($cursor as $user) {
             $users[] = self::mapUser($user);
         }
         return $users;
+    }
+
+    public function getAutocompleteForLanguages($search, $limit = null)
+    {
+        $search = addcslashes($search, "/.+?*[]()$^");
+        $regex = new MongoRegex("/^$search/i");
+        if (is_numeric($search)) {
+            //if they sent an all numeric search then they're probably looking for an int userID, optimize for that since mongo is type sensitive
+            $search = (int)$search;
+        }
+        //todo: this DOES NOT use an index
+        $or = array(array(self::KEY_NAME => array('$regex' => $regex)),
+                    array(self::KEY_LANG_ID => $search),
+                    );
+        $query = array('$or' => $or);
+        $coll = $this->getCollection(self::COLL_TRANSLATIONS);
+        $coll->setSlaveOkay(true);
+        $fields = array(self::KEY_LANG_ID => 1,
+                        self::KEY_NAME => 1,
+                        self::KEY_PROJECT => 1,
+                        );
+        //todo: sort by name
+        $cursor = $coll->find($query, $fields);
+        if (!empty($limit)) {
+            $cursor->limit($limit);
+        }
+        $langs = array();
+        //todo: return project names for each one...
+        foreach ($cursor as $lang) {
+            $langs[] = self::mapLanguage($lang);
+        }
+        return $langs;
     }
 
 }

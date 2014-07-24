@@ -39,6 +39,12 @@ class TranslationAPI
         return $permissions;
     }
 
+    public static function getPermissionsForUserID($userID)
+    {
+        $permissions = TranslationUser::getUserPermissions($userID);
+        return $permissions;
+    }
+
     public static function modifyMySettings($disablePoints = null)
     {
         $auth = TranslationAuth::getInstance();
@@ -55,9 +61,9 @@ class TranslationAPI
         return $result;
     }
 
-    public static function modifyUserLanguagePermissions($userID, $projectID, $languageID, $permissions)
+    public static function modifyUserLanguagePermissions($userID, $languageID, $permissions, $projectID = null)
     {
-        $result = TranslationUser::modifyUserLanguagePermissions($userID, $projectID, $languageID, $permissions);
+        $result = TranslationUser::modifyUserLanguagePermissions($userID, $languageID, $permissions, $projectID);
         return $result;
     }
 
@@ -102,10 +108,20 @@ class TranslationAPI
         return $return;
     }
 
-    public static function createLanguage($name, $projectID, $everyonePermission = null)
+    public static function createLanguage($name, $projectID, $everyonePermission = null, $copyPermsFromLangID = null, $copyPermsFromLangProjectID = null)
     {
         $db = TranslationDB::getInstance();
-        $return = $db->storeNewLanguage($name, $projectID, null, $everyonePermission);
+        $copyPermissionsFrom = array();
+        if (!empty($copyPermsFromLangID)) {
+            $copyPermissionsFrom['id'] = $copyPermsFromLangID;
+        }
+        if (!empty($copyPermsFromLangProjectID)) {
+            $copyPermissionsFrom['project'] = $copyPermsFromLangProjectID;
+        }
+        if (empty($copyPermissionsFrom)) {
+            $copyPermissionsFrom = null;
+        }
+        $return = $db->storeNewLanguage($name, $projectID, null, $everyonePermission, null, $copyPermissionsFrom);
         return $return;
     }
 
@@ -113,6 +129,20 @@ class TranslationAPI
     {
         $db = TranslationDB::getInstance();
         $return = $db->deleteLanguage($languageID, $projectID);
+        return $return;
+    }
+
+    public static function getLanguage($languageID, $projectID)
+    {
+        $db = TranslationDB::getInstance();
+        $return = $db->getLanguage($languageID, $projectID);
+        return $return;
+    }
+
+    public static function getLanguagesInProject($projectID)
+    {
+        $db = TranslationDB::getInstance();
+        $return = $db->getLanguagesInProject($projectID);
         return $return;
     }
 
@@ -181,6 +211,13 @@ class TranslationAPI
     {
         $db = TranslationDB::getInstance();
         $return = $db->getAutocompleteForUsername($query);
+        return $return;
+    }
+
+    public static function getAutocompleteForLanguage($query)
+    {
+        $db = TranslationDB::getInstance();
+        $return = $db->getAutocompleteForLanguage($query);
         return $return;
     }
 

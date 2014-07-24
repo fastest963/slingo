@@ -157,7 +157,7 @@ class TranslationDB
     }
 
     //set permissions to false to remove permissions (and fallback to defaults)
-    public function modifyUserLanguagePermissions($userID, $projectID, $languageID, $permissions, $deleteOtherLangPermissions = false)
+    public function modifyUserLanguagePermissions($userID, $languageID, $permissions, $projectID = null, $deleteOtherLangPermissions = false)
     {
         $return = array('success' => false,
                         'errorCode' => self::ERROR_UNKNOWN,
@@ -168,7 +168,7 @@ class TranslationDB
             return $return;
         }
 
-        $return['success'] = $this->connection->modifyUserLanguagePermissions($userID, $projectID, $languageID, $permissions, $deleteOtherLangPermissions);
+        $return['success'] = $this->connection->modifyUserLanguagePermissions($userID, $languageID, $permissions, $projectID, $deleteOtherLangPermissions);
         if (!$return['success']) {
             $return['errorCode'] = self::ERROR_NOT_FOUND;
         } else {
@@ -388,7 +388,13 @@ class TranslationDB
             }
             $permissions = $lang['permissions'];
         }
+
         //todo: make sure $id is actually something valid
+
+        if (empty($id)) {
+            $id = mb_strtolower(preg_replace("/[^a-zA-Z0-9]+/", "", $displayName));
+        }
+
         $result = $this->connection->storeNewLanguage($projectID, $displayName, $id, $permissions, $strings);
         if (!$result['success']) {
             if ($result['exists']) {
@@ -466,6 +472,21 @@ class TranslationDB
         return $return;
     }
 
+    public function getLanguagesInProject($projectID)
+    {
+        $return = array('languages' => null,
+                        'errorCode' => self::ERROR_UNKNOWN,
+                        );
+        if (empty($projectID)) {
+            $return['errorCode'] = self::ERROR_INVALID_PARAMS;
+            return $return;
+        }
+
+        $return['languages'] = $this->connection->getLanguages($projectID);
+        $return['errorCode'] = 0;
+        return $return;
+    }
+
     public function getString($stringID, $project, $lang = self::TEMPLATE_LANG, $includeSuggestions = false)
     {
         $return = array('string' => null,
@@ -525,6 +546,22 @@ class TranslationDB
         }
 
         $result['users'] = $this->connection->getAutocompleteForUsername($query, $limit);
+        $result['errorCode'] = 0;
+        return $result;
+    }
+
+    //will also return user if their userID is an exact match for $query
+    public function getAutocompleteForLanguage($query, $limit = 10)
+    {
+        $return = array('languages' => null,
+                        'errorCode' => self::ERROR_UNKNOWN,
+                        );
+        if (empty($query)) {
+            $return['errorCode'] = self::ERROR_INVALID_PARAMS;
+            return $return;
+        }
+
+        $result['languages'] = $this->connection->getAutocompleteForLanguages($query, $limit);
         $result['errorCode'] = 0;
         return $result;
     }

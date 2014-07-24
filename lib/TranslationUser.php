@@ -53,7 +53,20 @@ class TranslationUser
         return $result;
     }
 
-    public static function modifyUserLanguagePermissions($userID, $projectID, $languageID, $permissions, $bypassAuth = false)
+    public static function getUserPermissions($userID)
+    {
+        if (!TranslationAuth::getInstance()->getIsGlobalAdmin()) {
+            return array('success' => false,
+                         'errorCode' => TranslationDB::ERROR_INVALID_PERMISSIONS
+                         );
+        }
+
+        $db = TranslationDB::getInstance();
+        $result = $db->getUserLanguagesPermissions($userID);
+        return $result;
+    }
+
+    public static function modifyUserLanguagePermissions($userID, $languageID, $permissions, $projectID = null, $bypassAuth = false)
     {
         if (!$bypassAuth && !TranslationAuth::getInstance()->getIsGlobalAdmin()) {
             return array('success' => false,
@@ -62,7 +75,7 @@ class TranslationUser
         }
 
         $db = TranslationDB::getInstance();
-        $result = $db->modifyUserLanguagePermissions($userID, $projectID, $languageID, $permissions);
+        $result = $db->modifyUserLanguagePermissions($userID, $languageID, $permissions, $projectID = null);
         return $result;
     }
 

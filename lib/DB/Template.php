@@ -44,7 +44,7 @@ interface DB_Template
     /**
      * @return bool success
      */
-    public function modifyUserLanguagePermissions($userID, $projectID, $languageID, $permissions, $deleteOtherLangPermissions = false);
+    public function modifyUserLanguagePermissions($userID, $languageID, $permissions, $projectID = null, $deleteOtherLangPermissions = false);
 
     /**
      * If user wasn't found, return null
@@ -88,7 +88,7 @@ interface DB_Template
      *
      * @return array ('success' => bool, 'errorCode' => int)
      */
-    public function storeNewLanguage($projectID, $displayName, $id = null, $everyonePermission = 0, $strings = null);
+    public function storeNewLanguage($projectID, $displayName, $id, $everyonePermission = 0, $strings = null);
 
     /**
      * This does NOT check permissions so you must not allow this to be called directly from the API
@@ -137,6 +137,13 @@ interface DB_Template
      * @return array users
      */
     public function getAutocompleteForUsername($search, $limit = null);
+
+    /**
+     * Should also check to see if $search is exact match on languageID
+     *
+     * @return array languages
+     */
+    public function getAutocompleteForLanguages($search, $limit = null);
 
 }
 
