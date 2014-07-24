@@ -15,7 +15,7 @@ interface Auth_Template
      * If null is returned then we will fetch the username from DB
      * @return string|null
      */
-    public function getCurrentUsername($userID);
+    public function getUsernameForUserID($userID);
 
     /**
      * $password is NOT hashed

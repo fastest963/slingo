@@ -165,7 +165,7 @@ class TranslationAuth
     {
         if (!isset($this->username)) {
             //try auth-based call first, then fall-back to load()
-            $this->username = $this->auth->getCurrentUsername($this->userID);
+            $this->username = $this->auth->getUsernameForUserID($this->userID);
             if (!isset($this->username)) {
                 $this->load();
             }
@@ -273,7 +273,7 @@ class TranslationAuth
     public static function getUsernameForUserIDFromAuth($userID)
     {
         $auth = self::getInstance();
-        return $auth->auth->getCurrentUsername($userID);
+        return $auth->auth->getUsernameForUserID($userID);
     }
 }
 
