@@ -102,7 +102,7 @@ class TranslationAuth
         }
 
         if (!isset($this->username)) {
-            $this->username = $this->auth->getCurrentUsername($this->userID);
+            $this->username = $this->auth->getUsernameForUserID($this->userID);
         }
         $db = TranslationDB::getInstance();
         $result = $db->getUser($this->userID);
