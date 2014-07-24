@@ -449,7 +449,12 @@ class TranslationDB
             $return['errorCode'] = self::ERROR_NOT_FOUND;
         } else {
             $return['errorCode'] = 0;
-            $return['projects'] = $projects;
+            $projectsStripped = array();
+            foreach ($projects as $project) {
+                unset($project['id']);
+                $projectsStripped[] = $project;
+            }
+            $return['projects'] = $projectsStripped;
         }
         return $return;
     }
