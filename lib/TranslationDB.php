@@ -361,7 +361,7 @@ class TranslationDB
                         'errorCode' => self::ERROR_UNKNOWN,
                         );
 
-        if (empty($displayName) || empty($projectID)) {
+        if (empty($displayName) || empty($projectID) || (!empty($strings) && !is_array($strings))) {
             $return['errorCode'] = self::ERROR_INVALID_PARAMS;
             return $return;
         }
@@ -491,6 +491,29 @@ class TranslationDB
 
         $return['languages'] = $this->connection->getLanguages($projectID);
         $return['errorCode'] = 0;
+        return $return;
+    }
+
+    public function getLanguagesStats($projectID, $ids = null)
+    {
+        $return = array('languages' => null,
+                        'errorCode' => self::ERROR_UNKNOWN,
+                        );
+        if (empty($projectID)) {
+            $return['errorCode'] = self::ERROR_INVALID_PARAMS;
+            return $return;
+        }
+
+        $result = $this->connection->getLanguagesStats($projectID, $ids);
+        if (!$result['success']) {
+            $return['errorCode'] = self::ERROR_DB_ERROR;
+        } elseif (empty($result['languages'])) {
+            $return['languages'] = array();
+            $return['errorCode'] = self::ERROR_NOT_FOUND;
+        } else {
+            $return['errorCode'] = 0;
+            $return['languages'] = $result['languages'];
+        }
         return $return;
     }
 

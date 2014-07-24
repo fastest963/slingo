@@ -144,6 +144,14 @@ class TranslationAPIDefinitions
         return array('params' => $params);
     }
 
+    public static function getLanguagesStatsInProject()
+    {
+        $params = array('projectID' => self::REQUIRED,
+                        'languageIDs' => self::OPTIONAL,
+                        );
+        return array('params' => $params);
+    }
+
     public static function getUntranslatedLanguageStrings()
     {
         $params = array('projectID' => self::REQUIRED,

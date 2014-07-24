@@ -115,6 +115,12 @@ interface DB_Template
     public function getLanguages($projectID, $ids = null, $includeStrings = false, $includeSuggestions = false);
 
     /**
+     * if $ids is null, then return all languages in that project
+     * @return array (languages => of languages each with languageID, projectID, totalCount, translatedCount, success => bool)
+     */
+    public function getLanguagesStats($projectID, $ids = null);
+
+    /**
      * If not found, don't include key in array.
      * If $projectIDs is null, then return language from all projects
      * @return array mapped languages keyed by projectID

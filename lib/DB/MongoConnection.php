@@ -12,7 +12,8 @@ class DB_MongoConnection implements DB_Template
     const KEY_LANG_ID = "i";
     const KEY_PROJECT = "p";
     const KEY_NAME = "n";
-    const KEY_STRINGS = "s"; //keyed by stringID
+    const KEY_STRINGS = "s";
+    const KEY_STRING_ID = "i";
     const KEY_PERMISSIONS = "m"; //object keyed by userID for translations and int for users
     const KEY_SUGGESTIONS = "sg"; //keyed by stringID and value of array
     const KEY_TSMODIFIED = "ts";
@@ -45,7 +46,8 @@ class DB_MongoConnection implements DB_Template
                                     self::KEY_FLAGS => 'flags',
                                     );
 
-    private static $stringMap = array(self::KEY_STRING_VALUE => 'value',
+    private static $stringMap = array(self::KEY_STRING_ID => 'stringID',
+                                      self::KEY_STRING_VALUE => 'value',
                                       self::KEY_STRING_USERID => 'lastModifiedUserID',
                                       self::KEY_STRING_VARIABLES => 'variables',
                                       self::KEY_TSMODIFIED => 'tsModified',
@@ -149,7 +151,7 @@ class DB_MongoConnection implements DB_Template
         }
 
         $mapped = array();
-        foreach ($strings as $stringID => $string) {
+        foreach ($strings as $string) {
             $mappedString = array();
             foreach ($string as $key => $value) {
                 if (isset(self::$stringMap[$key])) {
@@ -157,7 +159,7 @@ class DB_MongoConnection implements DB_Template
                 }
             }
             if (!empty($mappedString) && !empty($mappedString[self::$stringMap[self::KEY_STRING_VALUE]])) {
-                $mapped[$stringID] = $mappedString;
+                $mapped[] = $mappedString;
             }
         }
         return $mapped;
@@ -188,11 +190,6 @@ class DB_MongoConnection implements DB_Template
             }
         }
         return $mapped;
-    }
-
-    private static function escapeStringID($key)
-    {
-        return preg_replace('/$\.\s/', '_', $key); //replace characters not allowed in key names
     }
 
     private static function getDoesIndexMatchTemplate($template, $index)
@@ -481,7 +478,7 @@ class DB_MongoConnection implements DB_Template
             $cursor = $coll->aggregateCursor($pipeline);
         } else {
             $aggregate = $coll->aggregate($pipeline);
-            if (empty($aggregate) || empty($aggregate['result'])) {
+            if (empty($aggregate) || !isset($aggregate['result'])) {
                 return $result;
             }
             $cursor = $aggregate['result'];
@@ -661,16 +658,9 @@ class DB_MongoConnection implements DB_Template
                      self::KEY_PROJECT => $projectID,
                      self::KEY_SUGGESTIONS => new stdClass(),
                      );
-
         if (empty($strings)) {
             //make sure that we store it as an object in mongo
-            $strings = new stdClass();
-        } else {
-            $escapedStrings = array();
-            foreach ($strings as $stringID => $value) {
-                $escapedStrings[self::escapeStringID($stringID)] = $value;
-            }
-            $strings = $escapedStrings;
+            $strings = array();
         }
         $doc[self::KEY_STRINGS] = $strings;
         if (is_null($everyonePermission)) {
@@ -755,6 +745,54 @@ class DB_MongoConnection implements DB_Template
         return $languagesKeyed;
     }
 
+    public function getLanguagesStats($projectID, $ids = null)
+    {
+        $result = array('success' => false,
+                        'languages' => array(),
+                        );
+        $query = array(self::KEY_PROJECT => $projectID,
+                       );
+        if (!empty($ids)) {
+            $query[self::KEY_LANG_ID] = array('$in' => $ids);
+        } else {
+            $query[self::KEY_LANG_ID] = array('$ne' => TranslationDB::TEMPLATE_LANG);
+        }
+        //if there is an empty strings array then make it an array with just null in it so unwind actually does something...
+        $stringCond = array(array('$eq' => array('$' . self::KEY_STRINGS, array())), array(null), '$' . self::KEY_STRINGS);
+        //add one if the key is translated and if its not translated add 0
+        $translateSum = array('$cond' => array(array('$eq' => array('$' . self::KEY_STRINGS . '.' . self::KEY_IS_TRANSLATED, true)), 1, 0));
+        //add 0 if the string is null, otherwise add 1
+        $totalSum = array('$cond' => array(array('$eq' => array('$' . self::KEY_STRINGS, null)), 0, 1));
+        $group = array('_id' => '$' . self::KEY_LANG_ID,
+                       'translatedCount' => array('$sum' => $translateSum),
+                       'totalCount' => array('$sum' => $totalSum),
+                       );
+        $pipeline = array(array('$match' => $query),
+                          array('$project' => array(self::KEY_STRINGS => array('$cond' => $stringCond), self::KEY_LANG_ID => 1, self::KEY_NAME => 1)),
+                          array('$unwind' => '$' . self::KEY_STRINGS),
+                          array('$group' => $group),
+                          );
+        $coll = $this->getCollection(self::COLL_TRANSLATIONS);
+        $coll->setSlaveOkay(true);
+        if (false && method_exists($coll, 'aggregateCursor')) {
+            $cursor = $coll->aggregateCursor($pipeline);
+        } else {
+            $aggregate = $coll->aggregate($pipeline);
+            if (empty($aggregate) || !isset($aggregate['result'])) {
+                return $result;
+            }
+            $cursor = $aggregate['result'];
+        }
+        foreach ($cursor as $doc) {
+            $doc[self::$langMap[self::KEY_LANG_ID]] = $doc['_id'];
+            unset($doc['_id']);
+            $doc[self::$langMap[self::KEY_PROJECT]] = $projectID;
+            $result['languages'][] = $doc;
+        }
+        $result['success'] = true;
+        return $result;
+    }
+
     /**
      * @return array languages keyed by projectID
      */
@@ -799,18 +837,16 @@ class DB_MongoConnection implements DB_Template
 
     public function getString($id, $project, $lang, $includeSuggestions)
     {
-        $id = self::escapeStringID($id);
         $result = array('string' => null,
                         'stringID' => $id,
                         );
-        $stringKey = self::KEY_STRINGS . "." . $id;
         $query = array(self::KEY_LANG_ID => $lang,
                        self::KEY_PROJECT => $project,
-                       $stringKey => array('$exists' => true),
+                       self::KEY_STRINGS . '.' . self::KEY_STRING_ID => $id,
                        );
         $coll = $this->getCollection(self::COLL_TRANSLATIONS);
         $coll->setSlaveOkay(true);
-        $fields = array($stringKey => 1);
+        $fields = array(self::KEY_STRINGS . '.$' => 1);
         if ($includeSuggestions) {
             $fields[self::KEY_SUGGESTIONS . "." . $id] = 1;
             $result['suggestions'] = array();
@@ -838,13 +874,9 @@ class DB_MongoConnection implements DB_Template
                        );
         $coll = $this->getCollection(self::COLL_TRANSLATIONS);
         $coll->setSlaveOkay(true);
-        $fields = array();
-        $idsKeyed = array();
-        foreach ($ids as $id) {
-            $id = self::escapeStringID($id);
-            $idsKeyed[$id] = true;
-            $fields[self::KEY_STRINGS . "." . $id] = 1;
-        }
+        //todo: limit num of ids
+        $elemMatch = array(self::KEY_STRING_ID => array('$in', $ids));
+        $fields = array(self::KEY_STRINGS => array('$elemMatch' => $elemMatch));
         $doc = $coll->findOne($query, $fields);
         if (empty($doc)) {
             return $result;
@@ -853,13 +885,13 @@ class DB_MongoConnection implements DB_Template
         return $result;
     }
 
-    public function getUntranslatedStrings($project, $lang, $orderedByPriority = true, $limit = 0)
+    public function getUntranslatedStrings($projectID, $languageID, $orderedByPriority = true, $limit = 0)
     {
         $result = array('strings' => null,
-        );
-        $query = array(self::KEY_LANG_ID => $lang,
-                       self::KEY_PROJECT => $project,
-        );
+                        );
+        $query = array(self::KEY_LANG_ID => $languageID,
+                       self::KEY_PROJECT => $projectID,
+                       );
         $coll = $this->getCollection(self::COLL_TRANSLATIONS);
         $coll->setSlaveOkay(true);
         //todo: test the performance of this
@@ -880,16 +912,14 @@ class DB_MongoConnection implements DB_Template
             $cursor = $coll->aggregateCursor($pipeline);
         } else {
             $aggregate = $coll->aggregate($pipeline);
-            if (empty($aggregate) || empty($aggregate['result'])) {
+            if (empty($aggregate) || !isset($aggregate['result'])) {
                 return $result;
             }
             $cursor = $aggregate['result'];
         }
         $strings = array();
         foreach ($cursor as $doc) {
-            //we can use the plus operator since strings is keyed by unique stringID
-            //todo: does the plus operator maintain order??
-            $strings += $doc[self::KEY_STRINGS];
+            $strings[] = $doc[self::KEY_STRINGS];
         }
         $result['strings'] = self::mapStrings($strings);
         return $result;

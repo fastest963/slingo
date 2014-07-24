@@ -146,6 +146,13 @@ class TranslationAPI
         return $return;
     }
 
+    public static function getLanguagesStatsInProject($projectID, $languageIDs = null)
+    {
+        $db = TranslationDB::getInstance();
+        $return = $db->getLanguagesStats($projectID, $languageIDs);
+        return $return;
+    }
+
     /*** Language-related methods ***/
 
     public static function getUntranslatedLanguageStrings($projectID, $langID, $orderedByPriority = null, $limit = null)
