@@ -76,6 +76,11 @@ interface DB_Template
     public function modifyUserFlags($userID, $flagsToAdd = 0, $flagsToRmove = 0);
 
     /**
+     * @return array (success => bool, exists => bool)
+     */
+    public function modifyUserUsername($userID, $newUsername, $password = null, $checkPassword = true);
+
+    /**
      * If you want to copy permissions from another language then specify the ID/project
      * Ex: $copyPermissionsFrom = array('id' => 'en', 'project' => 'android');
      *

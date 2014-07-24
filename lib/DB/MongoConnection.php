@@ -8,7 +8,8 @@ class DB_MongoConnection implements DB_Template
     const COLL_TRANSLATIONS = 'translations';
     const COLL_USERS = 'users';
 
-    const KEY_ID = "i";
+    const KEY_USER_ID = "_id";
+    const KEY_LANG_ID = "i";
     const KEY_PROJECT = "p";
     const KEY_NAME = "n";
     const KEY_STRINGS = "s"; //keyed by stringID
@@ -32,7 +33,7 @@ class DB_MongoConnection implements DB_Template
     const KEY_IS_TRANSLATED = "tr";
     const KEY_FLAGS = "f";
 
-    private static $langMap = array(self::KEY_ID => 'id',
+    private static $langMap = array(self::KEY_LANG_ID => 'id',
                                     self::KEY_PROJECT => 'projectID',
                                     self::KEY_NAME => 'displayName',
                                     self::KEY_PERMISSIONS => 'permissions',
@@ -40,7 +41,7 @@ class DB_MongoConnection implements DB_Template
                                     self::KEY_NUM_PENDING_STRINGS => 'numPendingStrings',
                                     );
 
-    private static $userMap = array(self::KEY_ID => 'userID',
+    private static $userMap = array(self::KEY_USER_ID => 'userID',
                                     self::KEY_USERNAME => 'username',
                                     self::KEY_GLOBAL_ADMIN => 'globalAdmin',
                                     self::KEY_PERMISSIONS => 'permissions',
@@ -220,13 +221,12 @@ class DB_MongoConnection implements DB_Template
     {
         $stringIsTranslatedKey = self::KEY_STRINGS . "." . self::KEY_IS_TRANSLATED;
         $stringPriorityKey = self::KEY_STRINGS . "." . self::KEY_PRIORITY;
-        $indexes = array(self::COLL_TRANSLATIONS => array(array('key' => array('_id' => 1)), //todo: do we need this?
-                                                          array('key' => array(self::KEY_ID => 1, self::KEY_PROJECT => 1), 'unique' => true, 'background' => true),
+        $indexes = array(self::COLL_TRANSLATIONS => array(array('key' => array('_id' => 1)),
+                                                          array('key' => array(self::KEY_LANG_ID => 1, self::KEY_PROJECT => 1), 'unique' => true, 'background' => true),
                                                           array('key' => array(self::KEY_PROJECT => 1), 'background' => true),
                                                           array('key' => array($stringIsTranslatedKey => 1, $stringPriorityKey => -1), 'background' => true),
                                                           ),
                          self::COLL_USERS => array(array('key' => array('_id' => 1)),
-                                                   array('key' => array(self::KEY_ID => 1), 'unique' => true, 'background' => true),
                                                    array('key' => array(self::KEY_USERNAME => 1), 'sparse' => true, 'unique' => true, 'background' => true),
                                                    array('key' => array(self::KEY_USER_POINTS => 1), 'sparse' => true, 'background' => true),
                                                    ),
@@ -294,7 +294,7 @@ class DB_MongoConnection implements DB_Template
     public function getUser($userID)
     {
         $coll = $this->getCollection(self::COLL_USERS);
-        $doc = $coll->findOne(array(self::KEY_ID => $userID));
+        $doc = $coll->findOne(array(self::KEY_USER_ID => $userID));
         if (is_null($doc)) {
             return null;
         }
@@ -305,12 +305,12 @@ class DB_MongoConnection implements DB_Template
     {
         //todo: should this just return mongoID?
         $coll = $this->getCollection(self::COLL_USERS);
-        $cursor = $coll->find()->sort(array(self::KEY_ID => -1))->limit(1);
+        $cursor = $coll->find()->sort(array(self::KEY_USER_ID => -1))->limit(1);
         $firstDoc = $cursor->getNext();
         if (empty($firstDoc)) {
             return 1;
         }
-        return $firstDoc[self::KEY_ID] + 1;
+        return $firstDoc[self::KEY_USER_ID] + 1;
     }
 
     /**
@@ -319,7 +319,7 @@ class DB_MongoConnection implements DB_Template
      */
     public function storeNewUser($userID, $username = null, $password = null, $permissions = null, $globalAdmin = false, $flags = null)
     {
-        $doc = array(self::KEY_ID => $userID,
+        $doc = array(self::KEY_USER_ID => $userID,
                      self::KEY_GLOBAL_ADMIN => $globalAdmin,
                      self::KEY_TSMODIFIED => time(),
                      );
@@ -356,7 +356,7 @@ class DB_MongoConnection implements DB_Template
 
     public function modifyUserGlobalPermissions($userID, $permissions = null, $globalAdmin = null, $deleteOtherPermissions = true)
     {
-        $query = array(self::KEY_ID => $userID,
+        $query = array(self::KEY_USER_ID => $userID,
                        );
         $set = array(self::KEY_TSMODIFIED => time(),
                      );
@@ -394,7 +394,7 @@ class DB_MongoConnection implements DB_Template
 
     public function modifyUserLanguagePermissions($userID, $projectID, $languageID, $permissions, $deleteOtherLangPermissions = false)
     {
-        $query = array(self::KEY_ID => $languageID,
+        $query = array(self::KEY_LANG_ID => $languageID,
                        self::KEY_PROJECT => $projectID,
                        );
         if ($permissions === false) {
@@ -420,7 +420,7 @@ class DB_MongoConnection implements DB_Template
                         'globalAdmin' => false,
                         'permissions' => null,
                         );
-        $query = array(self::KEY_ID => $userID,
+        $query = array(self::KEY_USER_ID => $userID,
                        );
         $coll = $this->getCollection(self::COLL_USERS);
         $keys = array(self::KEY_PERMISSIONS => 1,
@@ -460,15 +460,15 @@ class DB_MongoConnection implements DB_Template
             }
             if (!empty($projectID)) {
                 //need to get the template lang in case we need to fallback
-                $where[self::KEY_ID] = array('$in' => array($language, TranslationDB::TEMPLATE_LANG));
+                $where[self::KEY_LANG_ID] = array('$in' => array($language, TranslationDB::TEMPLATE_LANG));
             }
             $pipeline[] = array('$match' => $pipeline);
         }
         //use sort so we can get the _all_ lang's first
-        $pipeline[] = array('$sort' => array(self::KEY_ID => 1, self::KEY_PROJECT => 1));
+        $pipeline[] = array('$sort' => array(self::KEY_LANG_ID => 1, self::KEY_PROJECT => 1));
         $keys = array('_id' => 0,
                       self::KEY_PROJECT => 1,
-                      self::KEY_ID => 1,
+                      self::KEY_LANG_ID => 1,
                       'user' => '$' . self::KEY_PERMISSIONS . "." . $userID,
                       'default' => '$' . self::KEY_PERMISSIONS . "." . TranslationDB::DEFAULT_USER,
                       );
@@ -490,7 +490,7 @@ class DB_MongoConnection implements DB_Template
         $permissions = array();
         foreach ($cursor as $doc) {
             $projectID = $doc[self::KEY_PROJECT];
-            $lang = $doc[self::KEY_ID];
+            $lang = $doc[self::KEY_LANG_ID];
             if ($lang == TranslationDB::TEMPLATE_LANG) {
                 //even though they're 2 separate arrays we don't need to set the defaults one if we got the user one
                 if (isset($doc['user'])) {
@@ -537,7 +537,7 @@ class DB_MongoConnection implements DB_Template
      */
     public function modifyUserPassword($userID, $newPassword, $oldPassword = null)
     {
-        $query = array(self::KEY_ID => $userID,
+        $query = array(self::KEY_USER_ID => $userID,
                        );
         if (!is_null($oldPassword)) {
             $query[self::KEY_USER_PASSWORD] = $oldPassword;
@@ -559,7 +559,7 @@ class DB_MongoConnection implements DB_Template
         $return = array('success' => false,
                         'newPoints' => 0,
                         );
-        $query = array(self::KEY_ID => $userID,
+        $query = array(self::KEY_USER_ID => $userID,
                        );
         $coll = $this->getCollection(self::COLL_USERS);
         if ($skipIfDisabled) {
@@ -590,7 +590,7 @@ class DB_MongoConnection implements DB_Template
 
     public function modifyUserFlags($userID, $flagsToAdd = 0, $flagsToRemove = 0)
     {
-        $query = array(self::KEY_ID => $userID,
+        $query = array(self::KEY_USER_ID => $userID,
                        );
         $set = array(self::KEY_TSMODIFIED => time(),
                      );
@@ -610,6 +610,44 @@ class DB_MongoConnection implements DB_Template
         return true;
     }
 
+    public function modifyUserUsername($userID, $newUsername, $password = null, $checkPassword = true)
+    {
+        $return = array('success' => false,
+                        'exists' => false,
+                        );
+        $query = array(self::KEY_USER_ID => $userID,
+                       );
+        if ($checkPassword) {
+            $query[self::KEY_USER_PASSWORD] = $password;
+        }
+        $set = array(self::KEY_TSMODIFIED => time(),
+                     );
+        $unset = array();
+        if (empty($newUsername)) {
+            $unset[self::KEY_USERNAME] = 1;
+        } else {
+            $set[self::KEY_USERNAME] = $newUsername;
+        }
+        $coll = $this->getCollection(self::COLL_USERS);
+        $update = array('$set' => $set);
+        if (!empty($unset)) {
+            $update['$unset'] = $unset;
+        }
+        try {
+            $updateResult = $coll->update($query, $update, array('upsert' => false, 'multiple' => false, 'w' => true));
+        } catch (MongoCursorException $e) {
+            if ($e->getCode() == 11000) {
+                $return['exists'] = true;
+            } else {
+                throw $e;
+            }
+        }
+        if (!empty($updateResult['n'])) {
+            $return['success'] = true;
+        }
+        return $return;
+    }
+
     /**
      * @return array ('success' => bool, 'exists' => bool)
      * @throws MongoException
@@ -620,7 +658,7 @@ class DB_MongoConnection implements DB_Template
             $idObj = new MongoId();
             $id = $idObj->__toString();
         }
-        $doc = array(self::KEY_ID => $id,
+        $doc = array(self::KEY_LANG_ID => $id,
                      self::KEY_NAME => $displayName,
                      self::KEY_PROJECT => $projectID,
                      self::KEY_SUGGESTIONS => new stdClass(),
@@ -676,7 +714,7 @@ class DB_MongoConnection implements DB_Template
     public function deleteLanguage($id, $projectID = null)
     {
         $coll = $this->getCollection(self::COLL_TRANSLATIONS);
-        $query = array(self::KEY_ID => $id);
+        $query = array(self::KEY_LANG_ID => $id);
         if (!empty($projectID)) {
             $query[self::KEY_PROJECT] = $projectID;
         }
@@ -695,7 +733,7 @@ class DB_MongoConnection implements DB_Template
         $query = array(self::KEY_PROJECT => $projectID,
                        );
         if (!empty($ids)) {
-            $query[self::KEY_ID] = array('$in' => $ids);
+            $query[self::KEY_LANG_ID] = array('$in' => $ids);
         }
         $fields = null;
         if (!$includeSuggestions || !$includeStrings) {
@@ -712,7 +750,7 @@ class DB_MongoConnection implements DB_Template
         $cursor = $coll->find($query, $fields);
         $languagesKeyed = array();
         foreach ($cursor as $doc) {
-            $languagesKeyed[$doc[self::KEY_ID]] = self::mapLanguage($doc);
+            $languagesKeyed[$doc[self::KEY_LANG_ID]] = self::mapLanguage($doc);
         }
         return $languagesKeyed;
     }
@@ -722,7 +760,7 @@ class DB_MongoConnection implements DB_Template
      */
     public function getLanguageFromProjects($id, $projectIDs = null, $includeStrings = false, $includeSuggestions = false)
     {
-        $query = array(self::KEY_ID => $id,
+        $query = array(self::KEY_LANG_ID => $id,
                        );
         if (!empty($projectIDs)) {
             $query[self::KEY_PROJECT] = array('$in' => $projectIDs);
@@ -766,7 +804,7 @@ class DB_MongoConnection implements DB_Template
                         'stringID' => $id,
                         );
         $stringKey = self::KEY_STRINGS . "." . $id;
-        $query = array(self::KEY_ID => $lang,
+        $query = array(self::KEY_LANG_ID => $lang,
                        self::KEY_PROJECT => $project,
                        $stringKey => array('$exists' => true),
                        );
@@ -795,7 +833,7 @@ class DB_MongoConnection implements DB_Template
     {
         $result = array('strings' => null,
                         );
-        $query = array(self::KEY_ID => $lang,
+        $query = array(self::KEY_LANG_ID => $lang,
                        self::KEY_PROJECT => $project,
                        );
         $coll = $this->getCollection(self::COLL_TRANSLATIONS);
@@ -819,7 +857,7 @@ class DB_MongoConnection implements DB_Template
     {
         $result = array('strings' => null,
                         );
-        $query = array(self::KEY_ID => $lang,
+        $query = array(self::KEY_LANG_ID => $lang,
                        self::KEY_PROJECT => $project,
                        );
         $coll = $this->getCollection(self::COLL_TRANSLATIONS);

@@ -109,7 +109,7 @@ class TranslationAuth
         if (empty($result['user']) && $result['errorCode'] == TranslationDB::ERROR_NOT_FOUND) {
             //store this user in the db since this is the first time we've encountered them
             //this could happen if they used a third-party auth system
-            $storeResult = $db->storeNewUser(null, null, $this->userID);
+            $storeResult = $db->storeNewUser($this->username, null, $this->userID);
             if (!$storeResult['success']) {
                 trigger_error("Failed to store userID {$this->userID} into DB after successful auth!", E_USER_ERROR);
                 return false;
@@ -117,6 +117,17 @@ class TranslationAuth
             $user = array('points' => 0);
         } else {
             $user = $result['user'];
+            //detect if we need to update the username of this user on our end
+            if ($this->username != $user['username']) {
+                $modifyResult = $db->modifyUserUsername($this->userID, $this->username, null, false);
+                if (!empty($modifyResult['success'])) {
+                    if ($modifyResult['errorCode'] == TranslationDB::ERROR_DUP_EXISTS) {
+                        //todo: correct username of other user or just delete username of other user?
+                    }
+                    trigger_error("Failed to update userID {$this->userID} username to updated value {$this->username}!", E_USER_ERROR);
+                    return false;
+                }
+            }
         }
         if (!isset($this->username) && !empty($user['username'])) {
             $this->username = $user['username'];
@@ -256,6 +267,13 @@ class TranslationAuth
         $db = TranslationDB::getInstance();
         $result = $db->modifyUserFlags($this->userID, $flagsToAdd, $flagsToRemove);
         return $result;
+    }
+
+    //helper function for install.php to get username for default user from auth source
+    public static function getUsernameForUserIDFromAuth($userID)
+    {
+        $auth = self::getInstance();
+        return $auth->auth->getCurrentUsername($userID);
     }
 }
 

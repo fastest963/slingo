@@ -106,6 +106,8 @@ class TranslationDB
             $flags = (int)$flags;
         }
 
+        //todo: regex for username?
+
         $createResult = $this->connection->storeNewUser($userID, $username, $password, $permissions, $globalAdmin, $flags);
         $return['success'] = $createResult['success'];
         if (!$createResult['success'] && $createResult['exists']) {
@@ -260,6 +262,32 @@ class TranslationDB
             $return['errorCode'] = self::ERROR_NOT_FOUND;
         } else {
             $return['errorCode'] = 0;
+        }
+        return $return;
+    }
+
+    public function modifyUserUsername($userID, $newUsername, $password = null, $checkPassword = true)
+    {
+        $return = array('success' => false,
+                        'errorCode' => self::ERROR_UNKNOWN,
+                        );
+
+        if (empty($userID) || ($checkPassword && empty($password))) {
+            $return['errorCode'] = self::ERROR_INVALID_PARAMS;
+            return $return;
+        }
+        //todo: regex for username?
+
+        $result = $this->connection->modifyUserUsername($userID, $newUsername, $password, $checkPassword);
+        if (!$result['success']) {
+            if ($result['exists']) {
+                $return['errorCode'] = self::ERROR_DUP_EXISTS;
+            } else {
+                $return['errorCode'] = self::ERROR_NOT_FOUND;
+            }
+        } else {
+            $return['errorCode'] = 0;
+            $return['success'] = true;
         }
         return $return;
     }

@@ -50,16 +50,20 @@ if ($user['errorCode'] == TranslationDB::ERROR_NOT_FOUND) {
 $defaultAdminUserID = TranslationConfig::getDefaultAdminUserID();
 $admin = $db->getUser($defaultAdminUserID); //todo: wtfasdfasfd
 if ($admin['errorCode'] == TranslationDB::ERROR_NOT_FOUND) {
+    $username = TranslationAuth::getUsernameForUserIDFromAuth($defaultAdminUserID);
+    if (empty($username)) {
+        $username = "admin";
+    }
     $password = uniqid("", true);
     if (empty($config['auth']['passwordSalt'])) {
         TranslationConfig::$config['auth']['passwordSalt'] = substr(sha1(time() . rand(0, 99999999)), 0, 23);
-        echo "DefaultUser: Creating default admin account with username of \"admin\" and since no salt was provided, the password is incomprehensible.\n";
+        echo "DefaultUser: Creating default admin account with username of \"$username\" and since no salt was provided, the password is incomprehensible. This is okay if you're using custom auth.\n";
     } else {
-        echo "DefaultUser: Creating default admin account with username of \"admin\" and password of \"$password\".\n";
+        echo "DefaultUser: Creating default admin account with username of \"$username\" and password of \"$password\".\n";
     }
-    $newUserResult = $db->storeNewUser("admin", $password, $defaultAdminUserID, 0, true);
+    $newUserResult = $db->storeNewUser($username, $password, $defaultAdminUserID, 0, true);
     if (!$newUserResult['success']) {
-        echo "DefaultUser: Failed to create default admin account!";
+        echo "DefaultUser: Failed to create default $username account!";
         exit(1);
     }
 } elseif (!$admin['user']['globalAdmin']) {
