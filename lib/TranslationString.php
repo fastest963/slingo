@@ -7,8 +7,9 @@ class TranslationString
      */
     private static $extractInstance; //used for extraction, we re-use the same instance as an optimization
 
+    //todo: run test to make sure that $staticRegex matches something that $variableRegex would ALSO match or we might get confused
     private static $staticRegex = '/{[a-zA-Z0-9\_\-]+\}/';
-    private static $variableRegex = '/{([0-9]+)}/';
+    private static $variablesRegex = '/{([0-9]+)}/';
 
     private $value;
     private $nextVarIndex = 0;
@@ -19,9 +20,9 @@ class TranslationString
         $this->setValue($value);
     }
 
-    public static function setVariableRegex($variableRegex)
+    public static function setVariablesRegex($variablesRegex)
     {
-        self::$variableRegex = $variableRegex;
+        self::$variablesRegex = $variablesRegex;
     }
 
     public static function setStaticRegex($staticRegex)
@@ -50,7 +51,7 @@ class TranslationString
 
     public function parseRawString()
     {
-        if (empty(self::$variableRegex) || empty($this->value)) {
+        if (empty(self::$variablesRegex) || empty($this->value)) {
             return $this->value;
         }
 
@@ -71,6 +72,12 @@ class TranslationString
     public function getVariables()
     {
         return $this->variables;
+    }
+
+    public function calculatePriority()
+    {
+        //todo: actually calculate some priority
+        return 0;
     }
 
     public static function convertToRawString($string, $variables)
@@ -109,6 +116,7 @@ class TranslationString
         self::$extractInstance->parseRawString();
         $result = array('string' => self::$extractInstance->getValue(),
                         'variables' => self::$extractInstance->getVariables(),
+                        'priority' => self::$extractInstance->calculatePriority(),
                         );
         return $result;
     }
@@ -116,7 +124,7 @@ class TranslationString
     public static function validateString($string, $variables)
     {
         $matches = null;
-        $countMatches = preg_match_all(self::$variableRegex, $string, $matches);
+        $countMatches = preg_match_all(self::$variablesRegex, $string, $matches);
         if ($countMatches != count($variables)) {
             return false;
         }
@@ -129,13 +137,83 @@ class TranslationString
         }
         return true;
     }
+
+    public static function convertRawTemplateFileToStrings($rawStrings)
+    {
+        $strings = array();
+        if (!is_array($rawStrings)) {
+            return $strings;
+        }
+        foreach ($rawStrings as $stringID => $rawString) {
+            if (is_array($rawString)) {
+                if (empty($rawString['stringID']) || !isset($rawString['value'])) {
+                    continue;
+                }
+                $stringID = $rawString['stringID'];
+                $rawString = $rawString['value'];
+            }
+            $parsed = TranslationString::extractVariablesFromRawString($rawString);
+            $strings[] = array('stringID' => $stringID,
+                               'value' => $parsed['string'],
+                               'variables' => $parsed['variables'],
+                               'priority' => $parsed['priority'],
+                               );
+        }
+        return $strings;
+    }
+
+    public static function getDiffOfStrings($oldStrings, $newStrings)
+    {
+        $oldStringsKeyed = array();
+        foreach ($oldStrings as $string) {
+            if (isset($string['stringID'])) {
+                $oldStringsKeyed[$string['stringID']] = $string;
+            }
+        }
+        unset($oldStrings);
+
+        $diffStrings = array(); //keyed by stringID
+        foreach ($newStrings as $string) {
+            if (!isset($string['stringID'])) {
+                continue;
+            }
+            if (!isset($oldStringsKeyed[$string['stringID']])) {
+                $diffStrings[$string['stringID']] = $string;
+                continue;
+            }
+            $oldString = $oldStringsKeyed[$string['stringID']];
+            unset($oldStringsKeyed[$string['stringID']]);
+            $stringDiff = array('stringID' => $string['stringID']);
+            if ($string['value'] !== $oldString['value']) {
+                $stringDiff['value'] = $string['value'];
+            }
+            if ($string['priority'] != $oldString['priority']) {
+                $stringDiff['priority'] = $string['priority'];
+            }
+            if ($string['variables'] !== $oldString['variables']) {
+                $stringDiff['variables'] = $string['variables'];
+            }
+            if (count($stringDiff) > 1) {
+                $diffStrings[$string['stringID']] = $stringDiff;
+            }
+        }
+        //now see if any got deleted
+        foreach ($oldStringsKeyed as $stringID => $oldValue) {
+            $diffStrings[$stringID] = array('stringID' => $stringID,
+                                            'deleted' => true,
+                                            );
+        }
+        return $diffStrings;
+    }
 }
 
 if (isset(TranslationConfig::$config['staicRegex'])) {
     TranslationString::setStaticRegex(TranslationConfig::$config['staicRegex']);
 }
-if (isset(TranslationConfig::$config['variableRegex'])) {
-    TranslationString::setStaticRegex(TranslationConfig::$config['variableRegex']);
+/*
+if (isset(TranslationConfig::$config['variablesRegex'])) {
+    TranslationString::setVariablesRegex(TranslationConfig::$config['variablesRegex']);
 }
+*/
 
 //EOF

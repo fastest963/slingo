@@ -81,14 +81,9 @@ interface DB_Template
     public function modifyUserUsername($userID, $newUsername, $password = null, $checkPassword = true);
 
     /**
-     * If you want to copy permissions from another language then specify the ID/project
-     * Ex: $copyPermissionsFrom = array('id' => 'en', 'project' => 'android');
-     *
-     * If specifying $everyonePermission and $copyPermissionsFrom then the copy overwrites
-     *
      * @return array ('success' => bool, 'errorCode' => int)
      */
-    public function storeNewLanguage($projectID, $displayName, $id, $everyonePermission = 0, $strings = null);
+    public function storeNewLanguage($projectID, $displayName, $id, $strings, $version = 0, $permissions = null);
 
     /**
      * This does NOT check permissions so you must not allow this to be called directly from the API
@@ -136,6 +131,10 @@ interface DB_Template
     public function getString($id, $projectID, $lang, $includeSuggestions);
 
     public function getUntranslatedStrings($project, $lang, $orderedByPriority = true, $limit = 0);
+
+    public function updateProjectTemplate($projectID, $newStrings, $languageID = TranslationDB::TEMPLATE_LANG);
+
+    public function updateProjectFromStringsDiff($projectID, $diffStrings, $newVersion, $requiredVersion = null);
 
     /**
      * Should also check to see if $search is exact match on userID

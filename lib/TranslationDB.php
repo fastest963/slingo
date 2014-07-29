@@ -355,7 +355,7 @@ class TranslationDB
 
     //todo: rename project
 
-    public function storeNewLanguage($displayName, $projectID, $id = null, $everyonePermission = 0, $strings = null, $copyPermissionsFrom = null)
+    public function storeNewLanguage($displayName, $projectID, $id = null, $everyonePermission = null, $copyPermissionsFrom = null)
     {
         $return = array('success' => false,
                         'errorCode' => self::ERROR_UNKNOWN,
@@ -372,9 +372,8 @@ class TranslationDB
         }
 
         if (is_null($copyPermissionsFrom)) {
-            $permissions = array(self::DEFAULT_USER => 0,
-                                 );
-            if (!empty($everyonePermission)) {
+            $permissions = new stdClass();
+            if (!is_null($everyonePermission)) {
                 $permissions[self::DEFAULT_USER] = (int)$everyonePermission;
             }
         } else {
@@ -396,7 +395,19 @@ class TranslationDB
             $id = mb_strtolower(preg_replace("/[^a-zA-Z0-9]+/", "", $displayName));
         }
 
-        $result = $this->connection->storeNewLanguage($projectID, $displayName, $id, $permissions, $strings);
+        $result = $this->getTemplateForProject($projectID);
+        if (empty($result['template'])) {
+            $return['errorCode'] = $result['errorCode'];
+            return $return;
+        }
+        $template = $result['template'];
+        $strings = array();
+        if (!empty($template['strings'])) {
+            $strings = $template['strings'];
+        }
+        $version = (int)$template['version'];
+
+        $result = $this->connection->storeNewLanguage($projectID, $displayName, $id, $strings, $version, $permissions);
         if (!$result['success']) {
             if ($result['exists']) {
                 $return['errorCode'] = self::ERROR_DUP_EXISTS;
@@ -475,6 +486,26 @@ class TranslationDB
         } else {
             $return['errorCode'] = 0;
             $return['language'] = $lang;
+        }
+        return $return;
+    }
+
+    public function getTemplateForProject($projectID)
+    {
+        $return = array('template' => null,
+                        'errorCode' => self::ERROR_UNKNOWN,
+                        );
+        if (empty($projectID)) {
+            $return['errorCode'] = self::ERROR_INVALID_PARAMS;
+            return $return;
+        }
+
+        $lang = $this->connection->getLanguage(self::TEMPLATE_LANG, $projectID, true, false);
+        if (empty($lang)) {
+            $return['errorCode'] = self::ERROR_NOT_FOUND;
+        } else {
+            $return['errorCode'] = 0;
+            $return['template'] = $lang;
         }
         return $return;
     }
@@ -559,10 +590,82 @@ class TranslationDB
         return $return;
     }
 
-    public function storeNewSuggestion($stringID, $project, $lang, $suggestion)
+    public function storeNewSuggestion($stringID, $projectID, $languageID, $suggestion)
     {
 
     }
+
+    public function storeNewTemplate($projectID, $parsedStrings)
+    {
+        $return = array('success' => false,
+                        'diffStrings' => null,
+                        'newVersion' => null,
+                        'errorCode' => TranslationDB::ERROR_UNKNOWN,
+                        );
+        if (!is_array($parsedStrings)) {
+            $return['errorCode'] = TranslationDB::ERROR_INVALID_PARAMS;
+            return $return;
+        }
+
+        //check permissions here??
+        if (!TranslationAuth::getInstance()->getIsGlobalAdmin()) {
+            $return['errorCode'] = TranslationDB::ERROR_INVALID_PERMISSIONS;
+            return $return;
+        }
+        //regex for stringID??
+
+        foreach ($parsedStrings as $string) {
+            if (!isset($string['stringID'])) {
+                $return['errorCode'] = TranslationDB::ERROR_INVALID_PARAMS;
+                return $return;
+            }
+        }
+
+        $result = $this->connection->updateProjectTemplate($projectID, $parsedStrings, self::TEMPLATE_LANG);
+        if (!$result['success']) {
+            $return['errorCode'] = TranslationDB::ERROR_NOT_FOUND;
+            return $return;
+        }
+        $return['success'] = true;
+        $return['errorCode'] = 0;
+        $return['diffStrings'] = TranslationString::getDiffOfStrings($result['oldStrings'], $result['newStrings']);
+        $return['newVersion'] = $result['newVersion'];
+        return $return;
+    }
+
+    public function updateProjectFromStringsDiff($projectID, $diffStrings, $newVersion)
+    {
+        $return = array('languagesUpdated' => null,
+                        'languagesFailed' => null,
+                        'errorCode' => TranslationDB::ERROR_UNKNOWN,
+                        );
+        if (empty($projectID) || empty($diffStrings) || !is_array($diffStrings) || empty($newVersion) || !is_numeric($newVersion)) {
+            $return['errorCode'] = TranslationDB::ERROR_INVALID_PARAMS;
+            return $return;
+        }
+        //check permissions here??
+        if (!TranslationAuth::getInstance()->getIsGlobalAdmin()) {
+            $return['errorCode'] = TranslationDB::ERROR_INVALID_PERMISSIONS;
+            return $return;
+        }
+
+        foreach ($diffStrings as $stringID => $string) {
+            if (!isset($string['stringID']) || $stringID != $string['stringID']) {
+                $return['errorCode'] = TranslationDB::ERROR_INVALID_PARAMS;
+                return $return;
+            }
+        }
+
+        $newVersion = (int)$newVersion;
+        $requiredVersion = $newVersion - 1;
+        $result = $this->connection->updateProjectFromStringsDiff($projectID, $diffStrings, $newVersion, $requiredVersion);
+        $return['languagesUpdated'] = $result['updated'];
+        $return['languagesFailed'] = $result['failed'];
+        $return['errorCode'] = 0; //todo: if there are failed, should this still be 0??
+        return $return;
+    }
+
+    //todo: make updateProjectFromTemplate
 
     //will also return user if their userID is an exact match for $query
     public function getAutocompleteForUsername($query, $limit = 10)

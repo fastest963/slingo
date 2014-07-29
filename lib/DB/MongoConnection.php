@@ -20,6 +20,7 @@ class DB_MongoConnection implements DB_Template
     const KEY_STRING_USERID = "u"; //last userID to modify the string
     const KEY_STRING_VARIABLES = "v";
     const KEY_STRING_VALUE = "s";
+    const KEY_STRING_TRANSLATED = "st";
     const KEY_SUGGESTION_USERID = "u";
     const KEY_SUGGESTION_CREATED = "t";
     const KEY_SUGGESTION_VALUE = "v";
@@ -31,11 +32,15 @@ class DB_MongoConnection implements DB_Template
     const KEY_PRIORITY = "pr";
     const KEY_IS_TRANSLATED = "tr";
     const KEY_FLAGS = "f";
+    const KEY_VERSION = "vs";
 
     private static $langMap = array(self::KEY_LANG_ID => 'id',
                                     self::KEY_PROJECT => 'projectID',
                                     self::KEY_NAME => 'displayName',
                                     self::KEY_PERMISSIONS => 'permissions',
+                                    self::KEY_STRINGS => 'strings',
+                                    self::KEY_SUGGESTIONS => 'suggestions',
+                                    self::KEY_VERSION => 'version',
                                     );
 
     private static $userMap = array(self::KEY_USER_ID => 'userID',
@@ -48,11 +53,11 @@ class DB_MongoConnection implements DB_Template
 
     private static $stringMap = array(self::KEY_STRING_ID => 'stringID',
                                       self::KEY_STRING_VALUE => 'value',
+                                      self::KEY_STRING_TRANSLATED => 'translated',
                                       self::KEY_STRING_USERID => 'lastModifiedUserID',
                                       self::KEY_STRING_VARIABLES => 'variables',
                                       self::KEY_TSMODIFIED => 'tsModified',
                                       self::KEY_PRIORITY => 'priority',
-                                      self::KEY_IS_TRANSLATED => 'isTranslated',
                                       );
 
     private static $suggestionMap = array(self::KEY_SUGGESTION_VALUE => 'value',
@@ -152,6 +157,10 @@ class DB_MongoConnection implements DB_Template
 
         $mapped = array();
         foreach ($strings as $string) {
+            if (is_null($string)) {
+                continue;
+            }
+
             $mappedString = array();
             foreach ($string as $key => $value) {
                 if (isset(self::$stringMap[$key])) {
@@ -190,6 +199,27 @@ class DB_MongoConnection implements DB_Template
             }
         }
         return $mapped;
+    }
+
+    private static function reverseMapStrings($mappedStrings, $newTSModified = null)
+    {
+        $reverseStringMap = array_flip(self::$stringMap);
+        $stringsToStore = array();
+        foreach ($mappedStrings as $string) {
+            $newString = array();
+            foreach ($string as $key => $value) {
+                if (isset($reverseStringMap[$key])) {
+                    $newString[$reverseStringMap[$key]] = $value;
+                }
+            }
+            if (!empty($newString[self::KEY_STRING_ID])) {
+                if (!is_null($newTSModified)) {
+                    $newString[self::KEY_TSMODIFIED] = $newTSModified;
+                }
+                $stringsToStore[] = $newString;
+            }
+        }
+        return $stringsToStore;
     }
 
     private static function getDoesIndexMatchTemplate($template, $index)
@@ -651,23 +681,28 @@ class DB_MongoConnection implements DB_Template
      * @return array ('success' => bool, 'exists' => bool)
      * @throws MongoException
      */
-    public function storeNewLanguage($projectID, $displayName, $id, $everyonePermission = 0, $strings = null)
+    public function storeNewLanguage($projectID, $displayName, $id, $strings, $version = 0, $permissions = null)
     {
+        $now = time();
         $doc = array(self::KEY_LANG_ID => $id,
                      self::KEY_NAME => $displayName,
                      self::KEY_PROJECT => $projectID,
                      self::KEY_SUGGESTIONS => new stdClass(),
+                     self::KEY_VERSION => (int)$version,
+                     self::KEY_TSMODIFIED => $now,
                      );
         if (empty($strings)) {
             //make sure that we store it as an object in mongo
             $strings = array();
+        } else {
+            $strings = self::reverseMapStrings($strings, $now);
         }
         $doc[self::KEY_STRINGS] = $strings;
-        if (is_null($everyonePermission)) {
+        if (empty($permissions)) {
             //make sure that we store it as an object in mongo
             $doc[self::KEY_PERMISSIONS] = new stdClass();
         } else {
-            $doc[self::KEY_PERMISSIONS] = array(TranslationDB::DEFAULT_USER => (int)$everyonePermission);
+            $doc[self::KEY_PERMISSIONS] = $permissions;
         }
 
         $result = array('success' => false,
@@ -725,7 +760,7 @@ class DB_MongoConnection implements DB_Template
         } else {
             $query[self::KEY_LANG_ID] = array('$ne' => TranslationDB::TEMPLATE_LANG);
         }
-        $fields = null;
+        $fields = array();
         if (!$includeSuggestions || !$includeStrings) {
             $fields = array();
             if (!$includeStrings) {
@@ -925,8 +960,147 @@ class DB_MongoConnection implements DB_Template
         return $result;
     }
 
+    //todo: store who last updated
+    public function updateProjectTemplate($projectID, $newStrings, $languageID = TranslationDB::TEMPLATE_LANG)
+    {
+        $return = array('oldStrings' => null,
+                        'newStrings' => null,
+                        'newVersion' => null,
+                        'success' => false,
+                        );
+        $query = array(self::KEY_LANG_ID => $languageID,
+                       self::KEY_PROJECT => $projectID,
+                       );
+        $stringsToStore = self::reverseMapStrings($newStrings);
+        $set = array(self::KEY_STRINGS => $stringsToStore,
+                     self::KEY_TSMODIFIED => time(),
+                     );
+        $inc = array(self::KEY_VERSION => 1);
+        $update = array('$set' => $set,
+                        '$inc' => $inc,
+                        );
+        $coll = self::getCollection(self::COLL_TRANSLATIONS);
+        //get the old value so we can compare to new
+        $oldDoc = $coll->findAndModify($query, $update, array(self::KEY_STRINGS => 1, self::KEY_VERSION => 1), array('upsert' => false, 'new' => false, 'w' => true));
+        if (empty($oldDoc)) {
+            return $return;
+        }
+        $return['success'] = true;
+        $return['newStrings'] = $newStrings;
+        $return['oldStrings'] = self::mapStrings($oldDoc[self::KEY_STRINGS]);
+        if (empty($oldDoc[self::KEY_VERSION])) { //temporary while existing docs don't have a version field
+            $return['newVersion'] = 1;
+        } else {
+            $return['newVersion'] = $oldDoc[self::KEY_VERSION] + 1;
+        }
+        return $return;
+    }
+
+    public function updateProjectFromStringsDiff($projectID, $diffStrings, $newVersion, $requiredVersion = null)
+    {
+        $return = array('updated' => array(),
+                        'failed' => array(),
+                        );
+        $query = array(self::KEY_PROJECT => $projectID,
+                       self::KEY_LANG_ID => array('$ne' => TranslationDB::TEMPLATE_LANG),
+                       self::KEY_VERSION => array('$lt' => $newVersion),
+                       );
+        $now = time();
+        $reverseStringMap = array_flip(self::$stringMap);
+        $coll = self::getCollection(self::COLL_TRANSLATIONS);
+        $cursor = $coll->find($query, array(self::KEY_SUGGESTIONS => false));
+        foreach ($cursor as $doc) {
+            $languageID = $doc[self::KEY_LANG_ID];
+            if (!is_null($requiredVersion)) {
+                if ($doc[self::KEY_VERSION] !== $requiredVersion) {
+                    $return['failed'][] = $languageID;
+                    continue;
+                }
+            }
+
+            $query = array(self::KEY_PROJECT => $projectID,
+                           self::KEY_LANG_ID => $languageID,
+                           self::KEY_VERSION => $doc[self::KEY_VERSION],
+                           );
+            $localDiff = $diffStrings;
+            $deletedAnything = false;
+            $set = array(self::KEY_VERSION => $newVersion,
+                         self::KEY_TSMODIFIED => $now,
+                         );
+            $unset = array();
+            $i = 0;
+            foreach ($doc[self::KEY_STRINGS] as $i => $string) {
+                if (is_null($string)) {
+                    $deletedAnything = true;
+                    continue;
+                }
+                $stringID = $string[self::KEY_STRING_ID];
+                if (empty($localDiff[$stringID])) {
+                    continue;
+                }
+                $diff = $localDiff[$stringID];
+                unset($localDiff[$stringID]);
+                if (!empty($diff['deleted'])) {
+                    $deletedAnything = true;
+                    $set[self::KEY_STRINGS . ".$i"] = null;
+                    continue;
+                }
+                unset($diff['stringID']); //don't allow changing of this
+                foreach ($diff as $key => $value) {
+                    if (isset($reverseStringMap[$key])) {
+                        $set[self::KEY_STRINGS . ".$i.{$reverseStringMap[$key]}"] = $value;
+                    }
+                }
+                $set[self::KEY_STRINGS . ".$i." . self::KEY_TSMODIFIED] = $now;
+                //if value changed then we should removed translation
+                if (isset($diff['value'])) {
+                    $unset[self::KEY_STRINGS . ".$i." . self::KEY_STRING_TRANSLATED] = 1;
+                    $unset[self::KEY_STRINGS . ".$i." . self::KEY_IS_TRANSLATED] = 1;
+                    $unset[self::KEY_STRINGS . ".$i." . self::KEY_STRING_USERID] = 1;
+                }
+            }
+            if (!empty($localDiff)) {
+                foreach ($localDiff as $string) {
+                    $newString = array();
+                    foreach ($string as $key => $value) {
+                        if (isset($reverseStringMap[$key])) {
+                            $newString[$reverseStringMap[$key]] = $value;
+                        }
+                    }
+                    if (empty($newString[self::KEY_STRING_ID])) {
+                        continue;
+                    }
+                    $newString[self::KEY_TSMODIFIED] = $now;
+                    //cannot use $push with $set so we gotta just keep incrementing in here :/
+                    $i++;
+                    $set[self::KEY_STRINGS . ".$i"] = $newString;
+                }
+            }
+            $update = array('$set' => $set);
+            if (!empty($unset)) {
+                $update['$unset'] = $unset;
+            }
+            $result = $coll->update($query, $update, array('multiple' => false, 'upsert' => false, 'w' => true));
+            if ($result['n'] <= 0) {
+                $return['failed'][] = $languageID;
+                continue;
+            }
+            if ($deletedAnything) {
+                //remove all the nulls left over from the removed strings
+                $query[self::KEY_VERSION] = $newVersion;
+                $update = array('$pull' => array(self::KEY_STRINGS => null));
+                //todo: should we actually care about the result??
+                $coll->update($query, $update, array('multiple' => false, 'upsert' => false, 'w' => false));
+            }
+            $return['updated'][] = $languageID;
+        }
+        return $return;
+    }
+
     public function getAutocompleteForUsername($search, $limit = null)
     {
+        //todo: some sanity checks on the search value??
+
         $search = addcslashes($search, "/.+?*[]()$^");
         $regex = new MongoRegex("/^$search/i");
         if (is_numeric($search)) {
@@ -956,6 +1130,8 @@ class DB_MongoConnection implements DB_Template
 
     public function getAutocompleteForLanguages($search, $limit = null)
     {
+        //todo: some sanity checks on the search value??
+
         $search = addcslashes($search, "/.+?*[]()$^");
         $regex = new MongoRegex("/^$search/i");
         if (is_numeric($search)) {

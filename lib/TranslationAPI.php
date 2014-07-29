@@ -121,7 +121,7 @@ class TranslationAPI
         if (empty($copyPermissionsFrom)) {
             $copyPermissionsFrom = null;
         }
-        $return = $db->storeNewLanguage($name, $projectID, null, $everyonePermission, null, $copyPermissionsFrom);
+        $return = $db->storeNewLanguage($name, $projectID, null, $everyonePermission, $copyPermissionsFrom);
         return $return;
     }
 
